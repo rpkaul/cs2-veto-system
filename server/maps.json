@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Dust2"
+  },
+  {
+    "name": "Inferno"
+  },
+  {
+    "name": "Mirage"
+  },
+  {
+    "name": "Overpass"
+  },
+  {
+    "name": "Anubis"
+  },
+  {
+    "name": "Ancient"
+  },
+  {
+    "name": "Nuke",
+    "customImage": null
+  }
+]
