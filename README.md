@@ -1,8 +1,11 @@
 # Counter Strike Veto System
 
+### Check here live - 
+https://veto.lotgaming.xyz/
+
 A professional, real-time map veto system for Counter-Strike 2 matches. Built with React, Node.js, Socket.IO, and SQLite.
 
-![Counter Strike Veto System](https://img.shields.io/badge/CS2-%20VetoSystem-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)
+![Counter Strike Veto System](https://img.shields.io/badge/CS2-%20VetoSystem-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
 
 ## ✨ Features
 
@@ -20,7 +23,7 @@ A professional, real-time map veto system for Counter-Strike 2 matches. Built wi
 
 ### Prerequisites
 
-- Node.js >= 14.0.0
+- Node.js >= 18.0.0
 - npm or yarn
 
 ### Installation
