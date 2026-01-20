@@ -5,9 +5,40 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const db = require('./db');
 
-require('dotenv').config(); 
+require('dotenv').config();
+
+// Load database module with error handling
+let db;
+let dbError = null;
+try {
+    db = require('./db');
+} catch (error) {
+    dbError = error;
+    console.error('');
+    console.error('═══════════════════════════════════════════════════════════');
+    console.error('[SERVER] ❌ CRITICAL ERROR: Failed to load database module!');
+    console.error('═══════════════════════════════════════════════════════════');
+    console.error('');
+    console.error('Error:', error.message);
+    console.error('');
+    console.error('📦 SOLUTION: Install sqlite3 on your production server:');
+    console.error('');
+    console.error('   cd /path/to/server');
+    console.error('   npm install sqlite3');
+    console.error('');
+    console.error('If that fails (common on Linux servers), try:');
+    console.error('');
+    console.error('   sudo apt-get update');
+    console.error('   sudo apt-get install -y build-essential python3');
+    console.error('   npm install sqlite3 --build-from-source');
+    console.error('');
+    console.error('═══════════════════════════════════════════════════════════');
+    console.error('');
+    console.error('⚠️  Server will NOT start until sqlite3 is installed!');
+    console.error('');
+    process.exit(1);
+} 
 
 const app = express();
 app.use(cors());
@@ -44,14 +75,12 @@ async function loadData() {
             rooms[match.id] = match;
         });
         
-        console.log(`[DB] Loaded ${savedMatches.length} matches from SQLite database`);
         
         // Migration: Load from JSON if it exists (one-time migration)
         const HISTORY_FILE = path.join(__dirname, 'match_history.json');
         if (fs.existsSync(HISTORY_FILE) && savedMatches.length === 0) {
             try {
                 const savedData = JSON.parse(fs.readFileSync(HISTORY_FILE));
-                console.log(`[MIGRATION] Found ${savedData.length} matches in JSON, migrating to SQLite...`);
                 for (const match of savedData) {
                     const matchData = { 
                         ...match, 
@@ -61,23 +90,26 @@ async function loadData() {
                     await db.saveMatch(matchData);
                     rooms[match.id] = matchData;
                 }
-                console.log(`[MIGRATION] Migrated ${savedData.length} matches to SQLite`);
             } catch (jsonError) {
                 console.error("[MIGRATION] Error loading from JSON:", jsonError);
             }
         }
     } catch (e) { 
-        console.error("[DB] Error loading data:", e);
+        // Database loading error handled silently
     }
 }
 
-// Start loading data
-loadData();
+// Start loading data (don't block server startup if DB fails)
+loadData().catch(error => {
+    console.error('[SERVER] ❌ Failed to initialize database on startup:', error.message);
+    console.error('[SERVER] ⚠️  Server will start but database features may not work');
+    console.error('[SERVER] 📦 Make sure sqlite3 is installed: npm install sqlite3');
+});
 
 if (fs.existsSync(MAPS_FILE)) {
     try {
         activeMaps = JSON.parse(fs.readFileSync(MAPS_FILE));
-    } catch (e) { console.error("Maps load error", e); }
+    } catch (e) { /* Maps load error handled silently */ }
 } else {
     fs.writeFileSync(MAPS_FILE, JSON.stringify(activeMaps, null, 2));
 }
@@ -111,6 +143,15 @@ function saveMaps() {
 }
 
 // --- API ROUTES ---
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        database: db ? 'connected' : 'error',
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.get('/api/history', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -188,6 +229,22 @@ app.post('/api/admin/maps/update', (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
+// Track connected users
+let connectedUsers = 0;
+// Track users per room (roomId -> count)
+const roomUserCounts = {};
+
+// Function to broadcast user count to all clients
+function broadcastUserCount() {
+    io.emit('user_count', connectedUsers);
+}
+
+// Function to broadcast room-specific user count
+function broadcastRoomUserCount(roomId) {
+    const count = roomUserCounts[roomId] || 0;
+    io.to(roomId).emit('room_user_count', { roomId, count });
+}
+
 const SEQUENCES = {
   bo1: [ { t: 'A', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'side' } ],
   bo3: [ { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'side' } ],
@@ -207,7 +264,6 @@ const startTurnTimer = (roomId) => {
     if (room.timerHandle) clearTimeout(room.timerHandle);
     const timerSeconds = room.timerDuration || 60; // Get timer duration in seconds
     const duration = timerSeconds * 1000; // Convert to milliseconds
-    console.log('[TIMER] Starting timer for room', roomId, '- Room timerDuration:', room.timerDuration, '- Using:', timerSeconds, 'seconds');
     room.timerEndsAt = Date.now() + duration;
     room.timerHandle = setTimeout(() => { handleAutoAction(roomId); }, duration);
 };
@@ -243,10 +299,8 @@ const handleAutoAction = (roomId) => {
         if (idx !== -1) {
             const randomSide = Math.random() > 0.5 ? 'CT' : 'T';
             room.maps[idx].side = randomSide;
-            const lastPickedMapObj = room.maps.find(m => m.name === target && m.pickedBy);
-            const teamName = lastPickedMapObj && lastPickedMapObj.pickedBy ? 
-                (lastPickedMapObj.pickedBy === 'A' ? room.teamA : (lastPickedMapObj.pickedBy === 'B' ? room.teamB : 'System')) : 
-                'System';
+            // Get team name based on step.t (same as ban/pick logic)
+            const teamName = step.t === 'A' ? (room.teamA || 'Team A') : (step.t === 'B' ? (room.teamB || 'Team B') : 'System');
             const lastLogIndex = room.logs.length - 1;
             const lastLog = room.logs[lastLogIndex];
             if (lastLog && lastLog.includes(`picked ${target}`)) {
@@ -287,6 +341,16 @@ const checkMatchEnd = (room) => {
 };
 
 io.on('connection', (socket) => {
+  // Track which rooms this socket is in
+  socket.currentRoom = null;
+  
+  // Increment user count on connection
+  connectedUsers++;
+  // Send current count to the new client immediately
+  socket.emit('user_count', connectedUsers);
+  // Broadcast to all clients
+  broadcastUserCount();
+
   socket.on('create_match', ({ teamA, teamB, teamALogo, teamBLogo, format, customMapNames, customSequence, useTimer, useCoinFlip, timerDuration }) => {
     console.log('[CREATE_MATCH] Timer enabled:', useTimer, 'Timer duration:', timerDuration, 'Type:', typeof timerDuration);
     const roomId = generateKey(6);
@@ -306,7 +370,6 @@ io.on('connection', (socket) => {
     }
 
     const parsedTimerDuration = useTimer ? (parseInt(timerDuration) || 60) : 60;
-    console.log('[SERVER] Room created - useTimer:', !!useTimer, 'timerDuration received:', timerDuration, 'parsed:', parsedTimerDuration);
     rooms[roomId] = {
       id: roomId, date: new Date().toISOString(),
       keys: { admin: generateKey(8), A: generateKey(8), B: generateKey(8) },
@@ -325,7 +388,22 @@ io.on('connection', (socket) => {
 
   socket.on('join_room', ({ roomId, key }) => {
     if (!rooms[roomId]) return socket.emit('error', 'Match not found');
+    
+    // Leave previous room if any
+    if (socket.currentRoom && socket.currentRoom !== roomId) {
+      roomUserCounts[socket.currentRoom] = Math.max(0, (roomUserCounts[socket.currentRoom] || 0) - 1);
+      socket.leave(socket.currentRoom);
+      broadcastRoomUserCount(socket.currentRoom);
+    }
+    
+    // Join new room
     socket.join(roomId);
+    socket.currentRoom = roomId;
+    
+    // Increment room user count
+    roomUserCounts[roomId] = (roomUserCounts[roomId] || 0) + 1;
+    broadcastRoomUserCount(roomId);
+    
     const room = rooms[roomId];
     let role = 'viewer';
     if (key === room.keys.admin) role = 'admin';
@@ -334,6 +412,7 @@ io.on('connection', (socket) => {
     socket.emit('role_assigned', role);
     const { keys, timerHandle, ...safe } = room;
     socket.emit('update_state', safe);
+    
   });
 
   socket.on('team_ready', ({ roomId, key }) => {
@@ -526,9 +605,18 @@ io.on('connection', (socket) => {
 
   // Cleanup on disconnect (prevents memory leaks)
   socket.on('disconnect', () => {
+      // Decrement room user count if socket was in a room
+      if (socket.currentRoom) {
+          roomUserCounts[socket.currentRoom] = Math.max(0, (roomUserCounts[socket.currentRoom] || 0) - 1);
+          broadcastRoomUserCount(socket.currentRoom);
+      }
+      
+      // Decrement total user count on disconnect
+      connectedUsers = Math.max(0, connectedUsers - 1);
+      broadcastUserCount();
       // Note: We don't clean up timers here because multiple users can be in the same room
       // Timers are cleaned up when rooms are deleted or matches finish
   });
 });
 
-server.listen(3001, () => console.log('SERVER 3001'));
+server.listen(3001, () => {});

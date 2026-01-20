@@ -62,19 +62,80 @@ const playSound = (type = 'action') => {
                 oscillator.stop(audioContext.currentTime + 0.08);
                 break;
             case 'coin':
-                // Soft coin flip sound - two gentle beeps
-                [330, 440].forEach((freq, i) => {
+                // Continuous coin spinning sound - metallic wobble effect
+                const baseFreq = 200;
+                const wobbleAmount = 30;
+                const wobbleSpeed = 15; // How fast it wobbles
+                const totalDuration = 0.1; // Duration of each wobble cycle
+                
+                // Create multiple oscillators for a richer, metallic sound
+                for (let i = 0; i < 3; i++) {
                     const osc = audioContext.createOscillator();
                     const gain = audioContext.createGain();
                     osc.connect(gain);
                     gain.connect(audioContext.destination);
-                    osc.frequency.value = freq;
-                    osc.type = 'sine';
-                    gain.gain.setValueAtTime(0.06, audioContext.currentTime + i * 0.08); // Lower volume
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + i * 0.08 + 0.08); // Softer fade
-                    osc.start(audioContext.currentTime + i * 0.08);
-                    osc.stop(audioContext.currentTime + i * 0.08 + 0.08);
-                });
+                    
+                    // Different frequencies for harmonics
+                    osc.frequency.setValueAtTime(baseFreq + (i * 50), audioContext.currentTime);
+                    osc.type = i === 0 ? 'sine' : 'triangle'; // Mix of wave types
+                    
+                    // Volume envelope
+                    const startTime = audioContext.currentTime + (i * 0.03);
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.04 - (i * 0.01), startTime + 0.01);
+                    gain.gain.linearRampToValueAtTime(0.04 - (i * 0.01), startTime + totalDuration - 0.01);
+                    gain.gain.linearRampToValueAtTime(0, startTime + totalDuration);
+                    
+                    // Add frequency wobble for spinning effect
+                    for (let t = 0; t < totalDuration; t += 0.02) {
+                        const wobble = Math.sin((t * wobbleSpeed) * Math.PI * 2) * wobbleAmount;
+                        osc.frequency.setValueAtTime(
+                            baseFreq + (i * 50) + wobble, 
+                            startTime + t
+                        );
+                    }
+                    
+                    osc.start(startTime);
+                    osc.stop(startTime + totalDuration);
+                }
+                return;
+            case 'coinLoop':
+                // Continuous spinning coin sound - loops during animation
+                const baseFreq2 = 180;
+                const wobbleAmount2 = 25;
+                const wobbleSpeed2 = 12;
+                const cycleDuration = 0.15;
+                
+                // Create metallic spinning sound with multiple oscillators
+                for (let i = 0; i < 4; i++) {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    const filter = audioContext.createBiquadFilter();
+                    
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioContext.destination);
+                    
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 500 + (i * 100);
+                    
+                    const freq = baseFreq2 + (i * 40);
+                    osc.type = i === 0 ? 'sine' : (i === 1 ? 'triangle' : 'sawtooth');
+                    
+                    // Volume modulation for metallic wobble
+                    const startTime2 = audioContext.currentTime;
+                    gain.gain.setValueAtTime(0.03 - (i * 0.005), startTime2);
+                    gain.gain.linearRampToValueAtTime(0, startTime2 + cycleDuration);
+                    
+                    // Frequency wobble for spinning effect
+                    for (let t = 0; t < cycleDuration; t += 0.01) {
+                        const wobble = Math.sin((t * wobbleSpeed2) * Math.PI * 2) * wobbleAmount2;
+                        osc.frequency.setValueAtTime(freq + wobble, startTime2 + t);
+                    }
+                    
+                    osc.start(startTime2);
+                    osc.stop(startTime2 + cycleDuration);
+                }
                 return;
             case 'countdown':
                 // Soft countdown tick sound
@@ -94,7 +155,7 @@ const playSound = (type = 'action') => {
                 oscillator.stop(audioContext.currentTime + 0.12);
         }
     } catch (e) {
-        console.warn('Sound playback failed:', e);
+        // Sound playback failed silently
     }
 };
 
@@ -211,19 +272,59 @@ const LogLineRenderer = ({ log, teamA, teamB }) => {
 };
 
 // --- COIN FLIP COMPONENT (FIXED VISUALS) ---
-const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide }) => {
+const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide, soundEnabled = true }) => {
     const [isFlipping, setIsFlipping] = useState(false);
     const [showResult, setShowResult] = useState(false);
+    const [flipAnimation, setFlipAnimation] = useState(null);
+    const soundIntervalRef = useRef(null);
 
     useEffect(() => {
         if (gameState.coinFlip.result && gameState.coinFlip.status === 'deciding') {
+            // Generate random values for each flip
+            const randomRotations = Math.floor(Math.random() * 1800) + 1800; // 1800-3600 degrees
+            const randomDuration = (Math.random() * 1.5) + 2.5; // 2.5-4 seconds
+            const randomXAxis = (Math.random() * 20) - 10; // -10 to 10 degrees
+            const randomZAxis = (Math.random() * 20) - 10; // -10 to 10 degrees
+            
+            setFlipAnimation({
+                rotations: randomRotations,
+                duration: randomDuration,
+                xAxis: randomXAxis,
+                zAxis: randomZAxis
+            });
+            
             setIsFlipping(true);
+            
+            // Play spinning coin sound continuously during flip
+            if (soundEnabled) {
+                // Play initial coin sound
+                playSound('coin');
+                
+                // Loop the spinning sound every 150ms during the animation
+                soundIntervalRef.current = setInterval(() => {
+                    playSound('coinLoop');
+                }, 150);
+            }
+            
             setTimeout(() => {
+                // Clear the sound interval
+                if (soundIntervalRef.current) {
+                    clearInterval(soundIntervalRef.current);
+                    soundIntervalRef.current = null;
+                }
                 setIsFlipping(false);
                 setShowResult(true);
-            }, 3000); 
+            }, randomDuration * 1000); 
         }
-    }, [gameState.coinFlip.result, gameState.coinFlip.status]);
+        
+        // Cleanup on unmount or when component changes
+        return () => {
+            if (soundIntervalRef.current) {
+                clearInterval(soundIntervalRef.current);
+                soundIntervalRef.current = null;
+            }
+        };
+    }, [gameState.coinFlip.result, gameState.coinFlip.status, soundEnabled]);
 
     const isCaller = myRole === 'A';
     const isWinner = myRole === gameState.coinFlip.winner;
@@ -232,10 +333,67 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide }) => {
         // FIXED: Flat Slate Blue Background (#1e293b) - Not Black
         <div style={{position:'fixed',top:0,left:0,width:'100%',height:'100%',background:'#1e293b',zIndex:3000,display:'flex',justifyContent:'center',alignItems:'center', flexDirection:'column'}}>
             <style>
-                {`
-                    @keyframes flip3d {
-                        0% { transform: rotateY(0); }
-                        100% { transform: rotateY(1800deg); }
+                {flipAnimation && `
+                    @keyframes coinFlip3D {
+                        0% { 
+                            transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1);
+                            filter: brightness(1);
+                        }
+                        25% {
+                            transform: rotateY(${flipAnimation.rotations * 0.25}deg) rotateX(${flipAnimation.xAxis}deg) rotateZ(${flipAnimation.zAxis}deg) scale(1.1);
+                            filter: brightness(1.3);
+                        }
+                        50% {
+                            transform: rotateY(${flipAnimation.rotations * 0.5}deg) rotateX(${-flipAnimation.xAxis}deg) rotateZ(${-flipAnimation.zAxis}deg) scale(0.95);
+                            filter: brightness(0.8);
+                        }
+                        75% {
+                            transform: rotateY(${flipAnimation.rotations * 0.75}deg) rotateX(${flipAnimation.xAxis * 0.5}deg) rotateZ(${flipAnimation.zAxis * 0.5}deg) scale(1.05);
+                            filter: brightness(1.2);
+                        }
+                        100% { 
+                            transform: rotateY(${flipAnimation.rotations}deg) rotateX(0deg) rotateZ(0deg) scale(1);
+                            filter: brightness(1);
+                        }
+                    }
+                    
+                    @keyframes coinShadow {
+                        0%, 100% {
+                            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 
+                                        0 0 50px rgba(255, 215, 0, 0.3),
+                                        inset 0 0 20px rgba(255, 255, 255, 0.1),
+                                        0 0 0 0 rgba(255, 215, 0, 0);
+                        }
+                        25%, 75% {
+                            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3), 
+                                        0 0 80px rgba(255, 215, 0, 0.6),
+                                        inset 0 0 30px rgba(255, 255, 255, 0.2),
+                                        0 0 40px 10px rgba(255, 215, 0, 0.3);
+                        }
+                        50% {
+                            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 
+                                        0 0 100px rgba(255, 215, 0, 0.8),
+                                        inset 0 0 40px rgba(255, 255, 255, 0.3),
+                                        0 0 60px 20px rgba(255, 215, 0, 0.5);
+                        }
+                    }
+                    
+                    @keyframes fadeInScale {
+                        0% {
+                            opacity: 0;
+                            transform: scale(0.8);
+                        }
+                        100% {
+                            opacity: 1;
+                            transform: scale(1);
+                        }
+                    }
+                    
+                    .coin-3d {
+                        transform-style: preserve-3d;
+                        backface-visibility: hidden;
+                        animation: coinFlip3D ${flipAnimation ? flipAnimation.duration : 3}s cubic-bezier(0.4, 0.0, 0.2, 1) forwards,
+                                   coinShadow ${flipAnimation ? flipAnimation.duration : 3}s ease-in-out infinite;
                     }
                 `}
             </style>
@@ -255,27 +413,83 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide }) => {
             )}
 
             {(isFlipping || showResult) && (
-                <div style={{perspective:'1000px', marginBottom:'40px', display:'flex', flexDirection:'column', alignItems:'center'}}>
-                    <div style={{
-                        width:'150px', height:'150px', borderRadius:'50%', border:'5px solid #fff', 
-                        // FIXED: CSS Gradient Coin
-                        background: gameState.coinFlip.result === 'heads' ? 'radial-gradient(circle at 30% 30%, #ffd700, #b8860b)' : 'radial-gradient(circle at 30% 30%, #94a3b8, #475569)',
-                        boxShadow: gameState.coinFlip.result === 'heads' ? '0 0 50px rgba(255, 215, 0, 0.6)' : '0 0 50px rgba(148, 163, 184, 0.6)',
-                        animation: isFlipping ? 'flip3d 3s ease-out forwards' : 'none',
-                        marginBottom: '20px',
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        fontSize: '4rem', fontWeight: '900', color: '#fff', textShadow: '0 2px 5px rgba(0,0,0,0.5)', fontFamily:"'Rajdhani', sans-serif",
-                        transformStyle: 'preserve-3d'
-                    }}>
-                         {isFlipping ? '?' : (gameState.coinFlip.result === 'heads' ? 'H' : 'T')}
+                <div style={{
+                    perspective:'2000px', 
+                    perspectiveOrigin: 'center center',
+                    marginBottom:'40px', 
+                    display:'flex', 
+                    flexDirection:'column', 
+                    alignItems:'center',
+                    position: 'relative'
+                }}>
+                    <div 
+                        className={isFlipping ? 'coin-3d' : ''}
+                        style={{
+                            width:'180px', 
+                            height:'180px', 
+                            borderRadius:'50%', 
+                            border:'6px solid rgba(255, 255, 255, 0.9)',
+                            background: gameState.coinFlip.result === 'heads' 
+                                ? 'radial-gradient(circle at 30% 30%, #ffd700 0%, #ffed4e 30%, #b8860b 70%, #8b6914 100%)' 
+                                : 'radial-gradient(circle at 30% 30%, #cbd5e1 0%, #94a3b8 30%, #64748b 70%, #475569 100%)',
+                            marginBottom: '20px',
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center',
+                            fontSize: '5rem', 
+                            fontWeight: '900', 
+                            color: '#fff', 
+                            textShadow: '0 4px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3)', 
+                            fontFamily:"'Rajdhani', sans-serif",
+                            position: 'relative',
+                            overflow: 'hidden',
+                            transition: isFlipping ? 'none' : 'all 0.5s ease'
+                        }}
+                    >
+                        {/* 3D depth effect with pseudo-elements */}
+                        <div style={{
+                            position: 'absolute',
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '50%',
+                            background: gameState.coinFlip.result === 'heads'
+                                ? 'radial-gradient(circle at 70% 70%, rgba(0,0,0,0.3) 0%, transparent 60%)'
+                                : 'radial-gradient(circle at 70% 70%, rgba(0,0,0,0.4) 0%, transparent 60%)',
+                            pointerEvents: 'none'
+                        }}></div>
+                        <div style={{
+                            position: 'absolute',
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '50%',
+                            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 50%)',
+                            pointerEvents: 'none'
+                        }}></div>
+                        <span style={{
+                            position: 'relative',
+                            zIndex: 1,
+                            transform: isFlipping ? 'scale(0.8)' : 'scale(1)',
+                            transition: 'transform 0.3s ease'
+                        }}>
+                            {isFlipping ? '?' : (gameState.coinFlip.result === 'heads' ? 'H' : 'T')}
+                        </span>
                     </div>
                     
                     {!isFlipping && (
-                        // FIXED: Black Bold Text on White
+                        // FIXED: Black Bold Text on White with smooth fade-in
                         <div style={{
-                            background: '#fff', color: '#000', padding: '10px 40px', borderRadius: '50px', 
-                            fontSize: '2rem', fontWeight: '900', textTransform: 'uppercase',
-                            fontFamily: "'Rajdhani', sans-serif", boxShadow: '0 0 20px rgba(255, 255, 255, 0.5)'
+                            background: '#fff', 
+                            color: '#000', 
+                            padding: '12px 45px', 
+                            borderRadius: '50px', 
+                            fontSize: '2.2rem', 
+                            fontWeight: '900', 
+                            textTransform: 'uppercase',
+                            fontFamily: "'Rajdhani', sans-serif", 
+                            boxShadow: '0 0 30px rgba(255, 255, 255, 0.7), 0 0 60px rgba(255, 215, 0, 0.4)',
+                            animation: 'fadeInScale 0.5s ease-out',
+                            transform: 'scale(1)',
+                            transition: 'all 0.3s ease'
                         }}>
                             {gameState.coinFlip.result}
                         </div>
@@ -343,6 +557,7 @@ export default function App() {
   const [timerDuration, setTimerDuration] = useState(60); // Default 60 seconds
   const [useCoinFlip, setUseCoinFlip] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(localStorage.getItem('soundEnabled') !== 'false'); // Default enabled
+  const [userCount, setUserCount] = useState(0); // Track total connected users
   
   const prevLogsRef = useRef([]); // Track previous logs to detect new actions 
   
@@ -379,12 +594,18 @@ export default function App() {
             setAvailableMaps(data);
             setCustomSelectedMaps(data.map(m=>m.name));
         })
-        .catch(e => console.error("Map fetch failed:", e));
+        .catch(() => {});
 
     if(isAdminRoute && adminSecret) {
         fetchAdminHistory(adminSecret);
         fetchMapPool(adminSecret);
     }
+
+    // Listen for total user count updates (works on all pages)
+    socket.on('user_count', (count) => {
+        setUserCount(count);
+    });
+
 
     if (params.room && !isAdminRoute) {
       socket.emit('join_room', { roomId: params.room, key: params.key });
@@ -632,7 +853,33 @@ export default function App() {
       return (
           <div style={{...styles.container, background:'#05070a'}}>
               <h1 style={{...styles.neonTitle, marginTop: '20px', fontSize:'2.5rem'}}>CONTROL PANEL</h1>
-              <div style={{position:'absolute', top:'20px', right:'20px', color:'#00d4ff', fontSize:'0.9rem', cursor:'pointer'}} onClick={()=>{localStorage.removeItem('adminSecret'); window.location.reload();}}>LOGOUT</div>
+              <div style={{position:'absolute', top:'20px', right:'20px', display:'flex', alignItems:'center', gap:'15px'}}>
+                  {/* Total User Count in Admin Panel */}
+                  <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      color: '#00ff00',
+                      fontSize: '0.9rem',
+                      fontWeight: 'bold',
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      padding: '6px 12px',
+                      borderRadius: '5px',
+                      border: '1px solid #00ff00',
+                      fontFamily: "'Rajdhani', sans-serif"
+                  }}>
+                      <div style={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          background: '#00ff00',
+                          boxShadow: '0 0 10px #00ff00',
+                          animation: 'pulse 2s infinite'
+                      }}></div>
+                      <span>Total: {userCount}</span>
+                  </div>
+                  <div style={{color:'#00d4ff', fontSize:'0.9rem', cursor:'pointer'}} onClick={()=>{localStorage.removeItem('adminSecret'); window.location.reload();}}>LOGOUT</div>
+              </div>
               <button onClick={goHome} style={{position:'absolute', top:'20px', left:'20px', background:'transparent', border:'1px solid #444', color:'#fff', padding:'5px 10px'}}>← PUBLIC HOME</button>
               
               {!isAdminAuthenticated ? (
@@ -811,7 +1058,7 @@ export default function App() {
         <AnimatedBackground />
         <div style={styles.glassPanel}>
             {/* UPDATED HEADER LAYOUT */}
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '20px'}}>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '20px', position: 'relative'}}>
                  <img src={LOGO_URL} alt="Logo" style={styles.logo} />
                  <h1 style={styles.neonTitle}>LOT GAMING</h1>
             </div>
@@ -969,7 +1216,8 @@ export default function App() {
                   gameState={gameState} 
                   myRole={myRole} 
                   onCall={handleCoinCall} 
-                  onDecide={handleCoinDecide} 
+                  onDecide={handleCoinDecide}
+                  soundEnabled={soundEnabled}
               />
           </div>
       );
