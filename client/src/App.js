@@ -9,6 +9,70 @@ const SOCKET_URL = window.location.hostname === "localhost"
 const LOGO_URL = "https://i.ibb.co/0yLfyyQt/LOT-LOGO-03.jpg"; 
 const socket = io(SOCKET_URL);
 
+// --- MAP PREFIX DETECTION ---
+// Helper function to get the full map name with appropriate prefix
+const getMapNameWithPrefix = (mapName) => {
+    if (!mapName) return mapName;
+    
+    // If map name already contains a prefix (has underscore), return as is
+    if (mapName.includes('_')) {
+        return mapName.toLowerCase();
+    }
+    
+    // Known defusal maps (de_ prefix)
+    const defusalMaps = ['dust2', 'inferno', 'mirage', 'overpass', 'nuke', 'anubis', 'ancient', 'vertigo', 'cache', 'train', 'cobblestone', 'tuscan'];
+    
+    // Known hostage maps (cs_ prefix)
+    const hostageMaps = ['office', 'assault', 'italy', 'militia'];
+    
+    // Known aim maps (aim_ prefix)
+    const aimMaps = ['aim_map', 'aim_redline', 'aim_ag_texture2'];
+    
+    // Known awp maps (awp_ prefix)
+    const awpMaps = ['awp_india', 'awp_lego_2', 'awp_map'];
+    
+    const lowerName = mapName.toLowerCase();
+    
+    // Check each category
+    if (defusalMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
+        return `de_${lowerName}`;
+    }
+    if (hostageMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
+        return `cs_${lowerName}`;
+    }
+    if (aimMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
+        return `aim_${lowerName}`;
+    }
+    if (awpMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
+        return `awp_${lowerName}`;
+    }
+    
+    // Default to de_ for unknown maps (most common)
+    return `de_${lowerName}`;
+};
+
+// Helper function to get map image URL with prefix detection
+const getMapImageUrl = (mapName, customImage = null) => {
+    if (customImage) {
+        return { primary: customImage, fallbacks: [] };
+    }
+    
+    const mapWithPrefix = getMapNameWithPrefix(mapName);
+    const baseName = mapWithPrefix.toLowerCase();
+    
+    // Primary URL with detected prefix
+    const primaryUrl = `https://raw.githubusercontent.com/sivert-io/cs2-server-manager/refs/heads/master/map_thumbnails/${baseName}.png`;
+    
+    // Secondary fallback URLs with common prefixes
+    const secondaryUrls = [
+        `https://image.gametracker.com/images/maps/160x120/csgo/${baseName}.jpg`,
+        `https://image.gametracker.com/images/maps/160x120/csgo/de_${mapName.toLowerCase()}.jpg`, // Fallback for de_ prefix
+        `https://image.gametracker.com/images/maps/160x120/csgo/cs_${mapName.toLowerCase()}.jpg`, // Fallback for cs_ prefix
+    ];
+    
+    return { primary: primaryUrl, fallbacks: secondaryUrls };
+};
+
 // --- UTILITIES ---
 const getParams = () => {
   const params = new URLSearchParams(window.location.search);
@@ -267,6 +331,141 @@ const LogLineRenderer = ({ log, teamA, teamB }) => {
                     {sidePart}
                 </span>
             )}
+        </div>
+    );
+};
+
+// --- MAP CARD COMPONENT WITH IMAGE ERROR HANDLING ---
+const MapCard = ({ map, isInteractive, isHovered, onMouseEnter, onMouseLeave, onClick, actionColor, logData, mapOrderLabel, styles }) => {
+    const [imageFailed, setImageFailed] = useState(false);
+    const mapImageUrls = getMapImageUrl(map.name, map.customImage);
+    const imageUrl = mapImageUrls.primary;
+    const fallbackUrls = mapImageUrls.fallbacks.length > 0 
+        ? ', ' + mapImageUrls.fallbacks.map(url => `url(${url})`).join(', ')
+        : '';
+
+    // Test image loading
+    useEffect(() => {
+        if (map.customImage) {
+            // Custom images are assumed to work
+            setImageFailed(false);
+            return;
+        }
+        
+        const testImage = new Image();
+        const allUrls = [imageUrl, ...mapImageUrls.fallbacks];
+        let currentUrlIndex = 0;
+        let timeoutId;
+        
+        const tryNextUrl = () => {
+            if (currentUrlIndex >= allUrls.length) {
+                // All URLs failed
+                setImageFailed(true);
+                return;
+            }
+            
+            // Set a timeout to mark as failed if image takes too long
+            timeoutId = setTimeout(() => {
+                currentUrlIndex++;
+                if (currentUrlIndex < allUrls.length) {
+                    testImage.src = allUrls[currentUrlIndex];
+                } else {
+                    setImageFailed(true);
+                }
+            }, 3000); // 3 second timeout per URL
+            
+            testImage.onload = () => {
+                clearTimeout(timeoutId);
+                setImageFailed(false);
+            };
+            
+            testImage.onerror = () => {
+                clearTimeout(timeoutId);
+                currentUrlIndex++;
+                if (currentUrlIndex < allUrls.length) {
+                    testImage.src = allUrls[currentUrlIndex];
+                } else {
+                    setImageFailed(true);
+                }
+            };
+            
+            testImage.src = allUrls[currentUrlIndex];
+        };
+        
+        tryNextUrl();
+        
+        return () => {
+            clearTimeout(timeoutId);
+            testImage.onload = null;
+            testImage.onerror = null;
+        };
+    }, [map.name, imageUrl, mapImageUrls.fallbacks.join(','), map.customImage]);
+
+    const cardStyle = {
+        ...styles.mapCard,
+        backgroundImage: imageFailed 
+            ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+            : `linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%), url(${imageUrl})${fallbackUrls}`,
+        opacity: map.status === 'banned' ? 0.3 : 1,
+        filter: map.status === 'banned' ? 'grayscale(100%)' : 'none',
+        border: map.status === 'picked' ? '3px solid #00ff00' : map.status === 'decider' ? '3px solid #ffa500' : isInteractive ? `2px solid ${actionColor}` : '1px solid rgba(255,255,255,0.1)',
+        cursor: (map.status === 'available' && isInteractive) ? 'pointer' : 'default',
+        boxShadow: (isInteractive && isHovered) ? `0 0 20px ${actionColor}` : '0 5px 15px rgba(0,0,0,0.5)',
+        transform: (isInteractive && isHovered) ? 'scale(1.05) translateY(-5px)' : 'scale(1)',
+        position: 'relative'
+    };
+    
+    return (
+        <div 
+            onMouseEnter={onMouseEnter} 
+            onMouseLeave={onMouseLeave} 
+            onClick={onClick} 
+            style={cardStyle}
+        >
+            {imageFailed && (
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    textAlign: 'center',
+                    zIndex: 1
+                }}>
+                    <div style={{
+                        fontSize: '2rem',
+                        color: '#888',
+                        marginBottom: '10px',
+                        opacity: 0.5
+                    }}>🖼️</div>
+                    <div style={{
+                        fontSize: '0.85rem',
+                        color: '#aaa',
+                        marginBottom: '15px',
+                        fontWeight: 'bold'
+                    }}>MAP IMAGE NOT AVAILABLE</div>
+                    <div style={{
+                        fontSize: '1.2rem',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase'
+                    }}>{map.name}</div>
+                </div>
+            )}
+            {map.status === 'picked' && mapOrderLabel && <div style={styles.mapOrderBadge}>{mapOrderLabel}</div>}
+            <div style={styles.cardContent}>
+                <span style={styles.mapTitle}>{map.name}</span>
+                {map.status === 'banned' && <div style={styles.badgeBan}>BANNED BY {logData?.team || '...'}</div>}
+                {map.status === 'picked' && <div style={styles.badgePick}>PICKED BY {logData?.team || '...'} <div style={styles.miniSideBadge}>{logData?.sideText || 'WAITING...'}</div></div>}
+                {map.status === 'decider' && <div style={styles.badgeDecider}>DECIDER <div style={styles.miniSideBadge}>{logData?.sideText || 'WAITING FOR SIDE'}</div></div>}
+            </div>
         </div>
     );
 };
@@ -1328,33 +1527,20 @@ export default function App() {
             const playIndex = gameState.playedMaps ? gameState.playedMaps.indexOf(map.name) : -1;
             const mapOrderLabel = playIndex !== -1 ? `MAP ${playIndex + 1}` : null;
             
-            const imageUrl = map.customImage 
-                ? map.customImage 
-                : `https://raw.githubusercontent.com/sivert-io/cs2-server-manager/refs/heads/master/map_thumbnails/de_${map.name.toLowerCase()}.png`;
-            
-            // Secondary Fallback
-            const secondaryUrl = `https://image.gametracker.com/images/maps/160x120/csgo/de_${map.name.toLowerCase()}.jpg`;
-
-            const cardStyle = {
-                ...styles.mapCard,
-                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%), url(${imageUrl}), url(${secondaryUrl})`,
-                opacity: map.status === 'banned' ? 0.3 : 1,
-                filter: map.status === 'banned' ? 'grayscale(100%)' : 'none',
-                border: map.status === 'picked' ? '3px solid #00ff00' : map.status === 'decider' ? '3px solid #ffa500' : isInteractive ? `2px solid ${actionColor}` : '1px solid rgba(255,255,255,0.1)',
-                cursor: (map.status === 'available' && isMyTurn) ? 'pointer' : 'default',
-                boxShadow: (isInteractive && isHovered) ? `0 0 20px ${actionColor}` : '0 5px 15px rgba(0,0,0,0.5)',
-                transform: (isInteractive && isHovered) ? 'scale(1.05) translateY(-5px)' : 'scale(1)'
-            };
             return (
-                <div key={map.name} onMouseEnter={() => setHoveredItem(map.name)} onMouseLeave={() => setHoveredItem(null)} onClick={() => isInteractive ? handleAction(map.name) : null} style={cardStyle}>
-                  {map.status === 'picked' && mapOrderLabel && <div style={styles.mapOrderBadge}>{mapOrderLabel}</div>}
-                  <div style={styles.cardContent}>
-                    <span style={styles.mapTitle}>{map.name}</span>
-                    {map.status === 'banned' && <div style={styles.badgeBan}>BANNED BY {logData?.team || '...'}</div>}
-                    {map.status === 'picked' && <div style={styles.badgePick}>PICKED BY {logData?.team || '...'} <div style={styles.miniSideBadge}>{logData?.sideText || 'WAITING...'}</div></div>}
-                    {map.status === 'decider' && <div style={styles.badgeDecider}>DECIDER <div style={styles.miniSideBadge}>{logData?.sideText || 'WAITING FOR SIDE'}</div></div>}
-                  </div>
-                </div>
+                <MapCard
+                    key={map.name}
+                    map={map}
+                    isInteractive={isInteractive}
+                    isHovered={isHovered}
+                    onMouseEnter={() => setHoveredItem(map.name)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    onClick={() => isInteractive ? handleAction(map.name) : null}
+                    actionColor={actionColor}
+                    logData={logData}
+                    mapOrderLabel={mapOrderLabel}
+                    styles={styles}
+                />
             );
           })}
         </div>
