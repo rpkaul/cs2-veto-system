@@ -20,7 +20,7 @@ const getMapNameWithPrefix = (mapName) => {
     }
     
     // Known defusal maps (de_ prefix)
-    const defusalMaps = ['dust2', 'inferno', 'mirage', 'overpass', 'nuke', 'anubis', 'ancient', 'vertigo', 'cache', 'train', 'cobblestone', 'tuscan'];
+    const defusalMaps = ['dust2', 'inferno', 'mirage', 'overpass', 'nuke', 'anubis', 'ancient', 'vertigo', 'cache', 'train', 'cobblestone', 'tuscan', 'sanctum', 'poseidon'];
     
     // Known hostage maps (cs_ prefix)
     const hostageMaps = ['office', 'assault', 'italy', 'militia'];
@@ -30,6 +30,15 @@ const getMapNameWithPrefix = (mapName) => {
     
     // Known awp maps (awp_ prefix)
     const awpMaps = ['awp_india', 'awp_lego_2', 'awp_map'];
+    
+    // Known ar_ maps (arms race)
+    const arMaps = ['shoots', 'monastery', 'baggage', 'lake', 'stmarc', 'safehouse', 'sugarcane'];
+    
+    // Known bhop maps (bhop_ prefix)
+    const bhopMaps = ['bhop_map', 'bhop_easy', 'bhop_hard'];
+    
+    // Known ze maps (ze_ prefix - zombie escape)
+    const zeMaps = ['ze_map', 'ze_escape', 'ze_survival'];
     
     const lowerName = mapName.toLowerCase();
     
@@ -46,6 +55,15 @@ const getMapNameWithPrefix = (mapName) => {
     if (awpMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
         return `awp_${lowerName}`;
     }
+    if (arMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
+        return `ar_${lowerName}`;
+    }
+    if (bhopMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
+        return `bhop_${lowerName}`;
+    }
+    if (zeMaps.some(m => lowerName.includes(m) || m.includes(lowerName))) {
+        return `ze_${lowerName}`;
+    }
     
     // Default to de_ for unknown maps (most common)
     return `de_${lowerName}`;
@@ -59,16 +77,30 @@ const getMapImageUrl = (mapName, customImage = null) => {
     
     const mapWithPrefix = getMapNameWithPrefix(mapName);
     const baseName = mapWithPrefix.toLowerCase();
+    const mapNameLower = mapName.toLowerCase();
     
-    // Primary URL with detected prefix
-    const primaryUrl = `https://raw.githubusercontent.com/sivert-io/cs2-server-manager/refs/heads/master/map_thumbnails/${baseName}.png`;
+    // Primary URL with new GitHub repository
+    const primaryUrl = `https://raw.githubusercontent.com/rpkaul/cs-map-images/refs/heads/main/${baseName}.png`;
     
-    // Secondary fallback URLs with common prefixes
-    const secondaryUrls = [
-        `https://image.gametracker.com/images/maps/160x120/csgo/${baseName}.jpg`,
-        `https://image.gametracker.com/images/maps/160x120/csgo/de_${mapName.toLowerCase()}.jpg`, // Fallback for de_ prefix
-        `https://image.gametracker.com/images/maps/160x120/csgo/cs_${mapName.toLowerCase()}.jpg`, // Fallback for cs_ prefix
-    ];
+    // Secondary fallback URLs - try all possible prefixes
+    const prefixes = ['de_', 'ar_', 'cs_', 'awp_', 'aim_', 'bhop_', 'ze_'];
+    const secondaryUrls = [];
+    
+    // Add fallback with detected prefix first
+    secondaryUrls.push(`https://raw.githubusercontent.com/rpkaul/cs-map-images/refs/heads/main/${baseName}.jpg`);
+    
+    // Try all other prefixes as fallbacks
+    prefixes.forEach(prefix => {
+        const prefixedName = `${prefix}${mapNameLower}`;
+        if (prefixedName !== baseName) {
+            secondaryUrls.push(`https://raw.githubusercontent.com/rpkaul/cs-map-images/refs/heads/main/${prefixedName}.png`);
+            secondaryUrls.push(`https://raw.githubusercontent.com/rpkaul/cs-map-images/refs/heads/main/${prefixedName}.jpg`);
+        }
+    });
+    
+    // Legacy fallback URLs
+    secondaryUrls.push(`https://image.gametracker.com/images/maps/160x120/csgo/${baseName}.jpg`);
+    secondaryUrls.push(`https://image.gametracker.com/images/maps/160x120/csgo/de_${mapNameLower}.jpg`);
     
     return { primary: primaryUrl, fallbacks: secondaryUrls };
 };
@@ -281,8 +313,8 @@ const AnimatedBackground = () => (
 
 const RulesModal = ({ format, onClose }) => {
     const getRules = () => {
-        if (format.includes('wingman_bo1')) return ["WINGMAN Bo1:", "1. Team A Bans", "2. Team B Bans", "3. Team A Bans", "4. Team B Bans", "5. Last Map (Knife for Side)"];
-        if (format.includes('wingman_bo3')) return ["WINGMAN Bo3:", "1. Team A Bans", "2. Team B Bans", "3. Team A Picks", "4. Team B Side", "5. Team B Picks", "6. Team A Side", "7. Decider Map (Knife for Side)"];
+        if (format.includes('wingman_bo1')) return ["WINGMAN Bo1:", "1. Team A Bans", "2. Team B Bans", "3. Team A Bans", "4. Team B Bans", "5. Team A Bans", "6. Last Map (Knife for Side)"];
+        if (format.includes('wingman_bo3')) return ["WINGMAN Bo3:", "1. Team A Bans 2 maps", "2. Team A Picks 1 map (Team B picks side)", "3. Team B Picks 1 map (Team A picks side)", "4. Team B Bans 1 map", "5. Last Decider Map (Knife for Side)"];
         if (format.includes('faceit_bo1')) return ["FACEIT Bo1:", "1. Team A Bans 1", "2. Team B Bans 1", "3. Team A Bans 1", "4. Team B Bans 1", "5. Team A Bans 1", "6. Team B Bans 1", "7. Remaining Map (Knife for Side)"];
         if (format.includes('faceit_bo3')) return ["FACEIT Bo3:", "1. Team A Bans 1", "2. Team B Bans 1", "3. Team A Picks 1", "4. Team B Picks Side", "5. Team B Picks 1", "6. Team A Picks Side", "7. Team A Bans 1", "8. Team B Bans 1", "9. Decider Map (Knife for Side)"];
         if (format === 'bo1') return ["VRS Bo1:", "1. Team A Bans 2 maps", "2. Team B Bans 3 maps", "3. Team A Bans 1 map", "4. Leftover map is played, and Team B chooses the starting side"];
