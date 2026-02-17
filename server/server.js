@@ -8,6 +8,10 @@ const crypto = require('crypto');
 
 require('dotenv').config();
 
+// Load webhook modules
+const discordWebhook = require('./discord-webhook');
+const settings = require('./settings');
+
 // Load database module with error handling
 let db;
 let dbError = null;
@@ -38,14 +42,14 @@ try {
     console.error('⚠️  Server will NOT start until sqlite3 is installed!');
     console.error('');
     process.exit(1);
-} 
+}
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const MAPS_FILE = path.join(__dirname, 'maps.json');
-const MASTER_SECRET = process.env.ADMIN_SECRET || "default_secret"; 
+const MASTER_SECRET = process.env.ADMIN_SECRET || "default_secret";
 
 let rooms = {};
 
@@ -68,22 +72,25 @@ async function loadData() {
     try {
         // Initialize SQLite database and create table if needed
         await db.initDatabase();
-        
+
+        // Initialize settings table for admin webhook
+        await settings.initSettingsTable();
+
         // Load all matches from database
         const savedMatches = await db.loadAllMatches();
         savedMatches.forEach(match => {
             rooms[match.id] = match;
         });
-        
-        
+
+
         // Migration: Load from JSON if it exists (one-time migration)
         const HISTORY_FILE = path.join(__dirname, 'match_history.json');
         if (fs.existsSync(HISTORY_FILE) && savedMatches.length === 0) {
             try {
                 const savedData = JSON.parse(fs.readFileSync(HISTORY_FILE));
                 for (const match of savedData) {
-                    const matchData = { 
-                        ...match, 
+                    const matchData = {
+                        ...match,
                         finished: match.finished || false,
                         timerDuration: match.timerDuration || 60
                     };
@@ -94,7 +101,7 @@ async function loadData() {
                 console.error("[MIGRATION] Error loading from JSON:", jsonError);
             }
         }
-    } catch (e) { 
+    } catch (e) {
         // Database loading error handled silently
     }
 }
@@ -172,12 +179,12 @@ app.post('/api/admin/history', async (req, res) => {
         // Combine in-memory active rooms with database matches
         const activeMatches = Object.values(rooms).map(({ timerHandle, ...keep }) => keep);
         const dbMatches = await db.getAllMatches();
-        
+
         // Create a map of all matches, prioritizing in-memory (active) ones
         const matchMap = new Map();
         dbMatches.forEach(m => matchMap.set(m.id, m));
         activeMatches.forEach(m => matchMap.set(m.id, m));
-        
+
         const allMatches = Array.from(matchMap.values())
             .sort((a, b) => new Date(b.date) - new Date(a.date));
         res.json(allMatches);
@@ -192,10 +199,10 @@ app.post('/api/admin/delete', async (req, res) => {
     try {
         const room = rooms[req.body.id];
         if (room) {
-            if(room.timerHandle) clearTimeout(room.timerHandle);
+            if (room.timerHandle) clearTimeout(room.timerHandle);
             delete rooms[req.body.id];
         }
-        
+
         // Delete from database
         await db.deleteMatch(req.body.id);
         res.json({ success: true });
@@ -207,9 +214,9 @@ app.post('/api/admin/delete', async (req, res) => {
 
 app.post('/api/admin/reset', (req, res) => {
     if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
-    Object.values(rooms).forEach(r => { if(r.timerHandle) clearTimeout(r.timerHandle); });
-    rooms = {}; 
-    if(fs.existsSync(HISTORY_FILE)) fs.unlinkSync(HISTORY_FILE);
+    Object.values(rooms).forEach(r => { if (r.timerHandle) clearTimeout(r.timerHandle); });
+    rooms = {};
+    if (fs.existsSync(HISTORY_FILE)) fs.unlinkSync(HISTORY_FILE);
     res.json({ success: true });
 });
 
@@ -224,6 +231,52 @@ app.post('/api/admin/maps/update', (req, res) => {
     activeMaps = req.body.maps;
     saveMaps();
     res.json({ success: true, maps: activeMaps });
+});
+
+app.post('/api/admin/webhook/get', async (req, res) => {
+    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+    try {
+        const webhookUrl = await settings.getAdminWebhook();
+        res.json({ webhookUrl: webhookUrl || '' });
+    } catch (error) {
+        console.error("[API] Error getting admin webhook:", error);
+        res.status(500).json({ error: "Failed to get webhook" });
+    }
+});
+
+app.post('/api/admin/webhook/set', async (req, res) => {
+    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+    try {
+        const { webhookUrl } = req.body;
+
+        // Validate webhook URL if provided
+        if (webhookUrl && !discordWebhook.isValidDiscordWebhook(webhookUrl)) {
+            return res.status(400).json({ error: "Invalid Discord webhook URL" });
+        }
+
+        await settings.setAdminWebhook(webhookUrl || '');
+        res.json({ success: true });
+    } catch (error) {
+        console.error("[API] Error setting admin webhook:", error);
+        res.status(500).json({ error: "Failed to set webhook" });
+    }
+});
+
+app.post('/api/admin/webhook/test', async (req, res) => {
+    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+    try {
+        const { webhookUrl } = req.body;
+
+        if (!webhookUrl) {
+            return res.status(400).json({ error: "Webhook URL required" });
+        }
+
+        await discordWebhook.testWebhook(webhookUrl);
+        res.json({ success: true, message: "Webhook test successful" });
+    } catch (error) {
+        console.error("[API] Error testing webhook:", error);
+        res.status(500).json({ error: error.message || "Webhook test failed" });
+    }
 });
 
 const server = http.createServer(app);
@@ -246,17 +299,17 @@ function broadcastRoomUserCount(roomId) {
 }
 
 const SEQUENCES = {
-  bo1: [ { t: 'A', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'side' } ],
-  bo3: [ { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'side' } ],
-  bo5: [ { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'System', a: 'knife' } ],
-  faceit_bo1: [ { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'System', a: 'knife' } ],
-  faceit_bo3: [ { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'System', a: 'knife' } ],
-  faceit_bo5: [ { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'System', a: 'knife' } ],
-  wingman_bo1: [ { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'System', a: 'knife' } ],
-  wingman_bo3: [ { t: 'A', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'B', a: 'ban' }, { t: 'System', a: 'knife' } ]
+    bo1: [{ t: 'A', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'side' }],
+    bo3: [{ t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'side' }],
+    bo5: [{ t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'System', a: 'knife' }],
+    faceit_bo1: [{ t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'System', a: 'knife' }],
+    faceit_bo3: [{ t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'System', a: 'knife' }],
+    faceit_bo5: [{ t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'System', a: 'knife' }],
+    wingman_bo1: [{ t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'B', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'System', a: 'knife' }],
+    wingman_bo3: [{ t: 'A', a: 'ban' }, { t: 'A', a: 'ban' }, { t: 'A', a: 'pick' }, { t: 'B', a: 'side' }, { t: 'B', a: 'pick' }, { t: 'A', a: 'side' }, { t: 'B', a: 'ban' }, { t: 'System', a: 'knife' }]
 };
 
-const generateKey = (len=16) => crypto.randomBytes(len).toString('hex');
+const generateKey = (len = 16) => crypto.randomBytes(len).toString('hex');
 
 const startTurnTimer = (roomId) => {
     const room = rooms[roomId];
@@ -294,7 +347,7 @@ const handleAutoAction = (roomId) => {
         }
     } else if (step.a === 'side') {
         let target = room.lastPickedMap;
-        if (!target) { const d = room.maps.find(m => m.status === 'available'); if(d) target = d.name; }
+        if (!target) { const d = room.maps.find(m => m.status === 'available'); if (d) target = d.name; }
         const idx = room.maps.findIndex(m => m.name === target);
         if (idx !== -1) {
             const randomSide = Math.random() > 0.5 ? 'CT' : 'T';
@@ -314,7 +367,7 @@ const handleAutoAction = (roomId) => {
     }
 
     checkMatchEnd(room);
-    if(!room.finished) { startTurnTimer(roomId); } else { room.timerEndsAt = null; }
+    if (!room.finished) { startTurnTimer(roomId); } else { room.timerEndsAt = null; }
     saveHistory(roomId);
     const { keys, timerHandle, ...safe } = room;
     io.to(roomId).emit('update_state', safe);
@@ -322,301 +375,357 @@ const handleAutoAction = (roomId) => {
 
 const checkMatchEnd = (room) => {
     let checking = true;
-    while(checking && !room.finished) {
+    while (checking && !room.finished) {
         checking = false;
         if (room.step >= room.sequence.length) {
             room.finished = true;
             const d = room.maps.find(m => m.status === 'available');
-            if(d && d.status !== 'picked') { d.status='decider'; room.playedMaps.push(d.name); }
+            if (d && d.status !== 'picked') { d.status = 'decider'; room.playedMaps.push(d.name); }
             break;
         }
         const nextStep = room.sequence[room.step];
         if (nextStep && nextStep.a === 'knife') {
             const d = room.maps.find(m => m.status === 'available');
-            if(d) { d.status='decider'; d.side='Knife'; room.playedMaps.push(d.name); room.logs.push(`[DECIDER] ${d.name} (Knife for Side)`); }
+            if (d) { d.status = 'decider'; d.side = 'Knife'; room.playedMaps.push(d.name); room.logs.push(`[DECIDER] ${d.name} (Knife for Side)`); }
             room.finished = true;
             checking = false;
         }
     }
 };
 
+// Helper function to send webhook notifications
+async function notifyWebhook(roomId, eventType, data) {
+    try {
+        const room = rooms[roomId];
+        if (!room) return;
+
+        // Get admin webhook
+        const adminWebhook = await settings.getAdminWebhook();
+
+        // Send to admin webhook (if configured)
+        if (adminWebhook) {
+            await discordWebhook.sendDiscordNotification(adminWebhook, room, eventType, data);
+        }
+
+        // Send to match-specific webhook (if provided)
+        if (room.tempWebhookUrl) {
+            await discordWebhook.sendDiscordNotification(room.tempWebhookUrl, room, eventType, data);
+        }
+    } catch (error) {
+        console.error('[WEBHOOK] Error sending notification:', error);
+    }
+}
+
 io.on('connection', (socket) => {
-  // Track which rooms this socket is in
-  socket.currentRoom = null;
-  
-  // Increment user count on connection
-  connectedUsers++;
-  // Send current count to the new client immediately
-  socket.emit('user_count', connectedUsers);
-  // Broadcast to all clients
-  broadcastUserCount();
+    // Track which rooms this socket is in
+    socket.currentRoom = null;
 
-  socket.on('create_match', ({ teamA, teamB, teamALogo, teamBLogo, format, customMapNames, customSequence, useTimer, useCoinFlip, timerDuration }) => {
-    console.log('[CREATE_MATCH] Timer enabled:', useTimer, 'Timer duration:', timerDuration, 'Type:', typeof timerDuration);
-    const roomId = generateKey(6);
-    let finalSequence = SEQUENCES[format];
-    if (format === 'custom' && Array.isArray(customSequence) && customSequence.length > 0) finalSequence = customSequence;
-    
-    let finalMaps = [];
-    if (format.startsWith('wingman')) {
-        finalMaps = WINGMAN_MAPS.map(m => ({ name: m.name, customImage: null, status: 'available', pickedBy: null, side: null }));
-    } else if (format === 'custom' && Array.isArray(customMapNames) && customMapNames.length > 0) {
-        finalMaps = customMapNames.map(name => {
-            const existing = activeMaps.find(m => m.name === name);
-            return { name: name, customImage: existing ? (existing.customImage || null) : null, status: 'available', pickedBy: null, side: null };
-        });
-    } else {
-        finalMaps = activeMaps.map(m => ({ name: m.name, customImage: m.customImage || null, status: 'available', pickedBy: null, side: null }));
-    }
+    // Increment user count on connection
+    connectedUsers++;
+    // Send current count to the new client immediately
+    socket.emit('user_count', connectedUsers);
+    // Broadcast to all clients
+    broadcastUserCount();
 
-    const parsedTimerDuration = useTimer ? (parseInt(timerDuration) || 60) : 60;
-    rooms[roomId] = {
-      id: roomId, date: new Date().toISOString(),
-      keys: { admin: generateKey(8), A: generateKey(8), B: generateKey(8) },
-      teamA: teamA || "Team A", teamB: teamB || "Team B",
-      teamALogo: teamALogo || null, teamBLogo: teamBLogo || null,
-      format, sequence: finalSequence, step: 0, maps: finalMaps,
-      logs: [], finished: false, lastPickedMap: null, playedMaps: [],
-      useTimer: !!useTimer, ready: { A: false, B: false }, timerEndsAt: null, timerHandle: null,
-      timerDuration: parsedTimerDuration, // Store timer duration in seconds
-      useCoinFlip: !!useCoinFlip,
-      coinFlip: useCoinFlip ? { status: 'waiting_call', winner: null, result: null } : null
-    };
-    saveHistory(roomId);
-    socket.emit('match_created', { roomId, keys: rooms[roomId].keys });
-  });
+    socket.on('create_match', ({ teamA, teamB, teamALogo, teamBLogo, format, customMapNames, customSequence, useTimer, useCoinFlip, timerDuration, tempWebhookUrl }) => {
+        console.log('[CREATE_MATCH] Timer enabled:', useTimer, 'Timer duration:', timerDuration, 'Type:', typeof timerDuration);
+        const roomId = generateKey(6);
+        let finalSequence = SEQUENCES[format];
+        if (format === 'custom' && Array.isArray(customSequence) && customSequence.length > 0) finalSequence = customSequence;
 
-  socket.on('join_room', ({ roomId, key }) => {
-    if (!rooms[roomId]) return socket.emit('error', 'Match not found');
-    
-    // Leave previous room if any
-    if (socket.currentRoom && socket.currentRoom !== roomId) {
-      roomUserCounts[socket.currentRoom] = Math.max(0, (roomUserCounts[socket.currentRoom] || 0) - 1);
-      socket.leave(socket.currentRoom);
-      broadcastRoomUserCount(socket.currentRoom);
-    }
-    
-    // Join new room
-    socket.join(roomId);
-    socket.currentRoom = roomId;
-    
-    // Increment room user count
-    roomUserCounts[roomId] = (roomUserCounts[roomId] || 0) + 1;
-    broadcastRoomUserCount(roomId);
-    
-    const room = rooms[roomId];
-    let role = 'viewer';
-    if (key === room.keys.admin) role = 'admin';
-    else if (key === room.keys.A) role = 'A';
-    else if (key === room.keys.B) role = 'B';
-    socket.emit('role_assigned', role);
-    const { keys, timerHandle, ...safe } = room;
-    socket.emit('update_state', safe);
-    
-  });
-
-  socket.on('team_ready', ({ roomId, key }) => {
-      const room = rooms[roomId];
-      if (!room || room.finished || !room.useTimer) return;
-      let role = null;
-      if (key === room.keys.A) role = 'A';
-      else if (key === room.keys.B) role = 'B';
-      if (role && !room.ready[role]) {
-          room.ready[role] = true;
-          room.logs.push(`[READY] ${role === 'A' ? room.teamA : room.teamB} is Ready`);
-          const coinFlipDone = !room.useCoinFlip || (room.coinFlip && room.coinFlip.status === 'done');
-          if (room.ready.A && room.ready.B && coinFlipDone) {
-              room.logs.push(`[SYSTEM] Both teams ready! Timer started.`);
-              startTurnTimer(roomId);
-          }
-          saveHistory(roomId);
-          const { keys, timerHandle, ...safe } = room;
-          io.to(roomId).emit('update_state', safe);
-      }
-  });
-
-  socket.on('coin_call', ({ roomId, call, key }) => {
-      const room = rooms[roomId];
-      if (!room || !room.useCoinFlip || !room.coinFlip || room.coinFlip.status !== 'waiting_call') return;
-      if (key !== room.keys.A) return; 
-
-      const result = crypto.randomInt(0, 2) === 0 ? 'heads' : 'tails';
-      const winner = (call === result) ? 'A' : 'B';
-      
-      room.coinFlip.result = result;
-      room.coinFlip.winner = winner;
-      room.coinFlip.status = 'deciding'; 
-      
-      room.logs.push(`[COIN] ${room.teamA} called ${call.toUpperCase()}. Result: ${result.toUpperCase()}. Winner: ${winner === 'A' ? room.teamA : room.teamB}`);
-      saveHistory();
-      const { keys, timerHandle, ...safe } = room;
-      io.to(roomId).emit('update_state', safe);
-  });
-
-  socket.on('coin_decision', ({ roomId, decision, key }) => {
-      // decision: 'first' (We Start) or 'second' (They Start)
-      const room = rooms[roomId];
-      if (!room || !room.useCoinFlip || room.coinFlip.status !== 'deciding') return;
-      const winner = room.coinFlip.winner;
-      if (key !== room.keys[winner]) return; 
-
-      let swapSequence = false;
-      // Default: A starts.
-      // If A is winner and picks 'second', B starts (swap).
-      // If B is winner and picks 'first', B starts (swap).
-      if (winner === 'A' && decision === 'second') swapSequence = true;
-      if (winner === 'B' && decision === 'first') swapSequence = true;
-
-      if (swapSequence) {
-          room.sequence = room.sequence.map(step => {
-              if (step.t === 'A') return { ...step, t: 'B' };
-              if (step.t === 'B') return { ...step, t: 'A' };
-              return step;
-          });
-      }
-
-      // FIXED LOGIC: Base log on the DECISION, not the swap
-      const winnerName = winner === 'A' ? room.teamA : room.teamB;
-      if (decision === 'first') {
-          room.logs.push(`[COIN] ${winnerName} chose to start first.`);
-      } else {
-          room.logs.push(`[COIN] ${winnerName} chose to let opponent start.`);
-      }
-
-      room.coinFlip.status = 'done';
-      if (room.useTimer && room.ready.A && room.ready.B) { startTurnTimer(roomId); }
-      saveHistory(roomId);
-      const { keys, timerHandle, ...safe } = room;
-      io.to(roomId).emit('update_state', safe);
-  });
-
-  socket.on('action', ({ roomId, data, key }) => {
-    const room = rooms[roomId];
-    if (!room || room.finished) return;
-    if (room.useTimer && (!room.ready.A || !room.ready.B)) return;
-    if (room.useCoinFlip && (!room.coinFlip || room.coinFlip.status !== 'done')) return;
-
-    const currentStep = room.sequence[room.step];
-    if (!currentStep) return; // Safety check: step might be undefined
-    if (currentStep.t !== 'System' && key !== room.keys.admin && key !== room.keys[currentStep.t]) return;
-
-    if (currentStep.a === 'ban' || currentStep.a === 'pick') {
-        const idx = room.maps.findIndex(m => m.name === data);
-        if (idx === -1 || room.maps[idx].status !== 'available') return;
-        const map = room.maps[idx];
-        if (currentStep.a === 'ban') {
-            map.status = 'banned';
-            room.logs.push(`[BAN] ${currentStep.t === 'A' ? room.teamA : room.teamB} banned ${map.name}`);
+        let finalMaps = [];
+        if (format.startsWith('wingman')) {
+            finalMaps = WINGMAN_MAPS.map(m => ({ name: m.name, customImage: null, status: 'available', pickedBy: null, side: null }));
+        } else if (format === 'custom' && Array.isArray(customMapNames) && customMapNames.length > 0) {
+            finalMaps = customMapNames.map(name => {
+                const existing = activeMaps.find(m => m.name === name);
+                return { name: name, customImage: existing ? (existing.customImage || null) : null, status: 'available', pickedBy: null, side: null };
+            });
         } else {
-            map.status = 'picked';
-            map.pickedBy = currentStep.t;
-            room.lastPickedMap = map.name;
-            room.playedMaps.push(map.name);
-            room.logs.push(`[PICK] ${currentStep.t === 'A' ? room.teamA : room.teamB} picked ${map.name}`);
+            finalMaps = activeMaps.map(m => ({ name: m.name, customImage: m.customImage || null, status: 'available', pickedBy: null, side: null }));
         }
-        room.step++;
-    } else if (currentStep.a === 'side') {
-        let target = room.lastPickedMap;
-        if (!target) { const d = room.maps.find(m => m.status === 'available'); if(d) target = d.name; }
-        const idx = room.maps.findIndex(m => m.name === target);
-        if (idx !== -1) {
-            room.maps[idx].side = data;
-            const teamName = currentStep.t === 'A' ? room.teamA : room.teamB;
-            const lastLogIndex = room.logs.length - 1;
-            const lastLog = room.logs[lastLogIndex];
-            if (lastLog && lastLog.includes(`picked ${target}`)) {
-                room.logs[lastLogIndex] = `${lastLog} (${teamName} chose ${data} side for ${target})`;
-            } else {
-                room.logs.push(`[SIDE] ${teamName} chose ${data} side for ${target}`);
+
+        const parsedTimerDuration = useTimer ? (parseInt(timerDuration) || 60) : 60;
+        rooms[roomId] = {
+            id: roomId, date: new Date().toISOString(),
+            keys: { admin: generateKey(8), A: generateKey(8), B: generateKey(8) },
+            teamA: teamA || "Team A", teamB: teamB || "Team B",
+            teamALogo: teamALogo || null, teamBLogo: teamBLogo || null,
+            format, sequence: finalSequence, step: 0, maps: finalMaps,
+            logs: [], finished: false, lastPickedMap: null, playedMaps: [],
+            useTimer: !!useTimer, ready: { A: false, B: false }, timerEndsAt: null, timerHandle: null,
+            timerDuration: parsedTimerDuration, // Store timer duration in seconds
+            useCoinFlip: !!useCoinFlip,
+            coinFlip: useCoinFlip ? { status: 'waiting_call', winner: null, result: null } : null,
+            tempWebhookUrl: tempWebhookUrl || null
+        };
+        saveHistory(roomId);
+
+        // Send webhook notification for match creation
+        notifyWebhook(roomId, 'match_created', {});
+
+        socket.emit('match_created', { roomId, keys: rooms[roomId].keys });
+    });
+
+    socket.on('join_room', ({ roomId, key }) => {
+        if (!rooms[roomId]) return socket.emit('error', 'Match not found');
+
+        // Leave previous room if any
+        if (socket.currentRoom && socket.currentRoom !== roomId) {
+            roomUserCounts[socket.currentRoom] = Math.max(0, (roomUserCounts[socket.currentRoom] || 0) - 1);
+            socket.leave(socket.currentRoom);
+            broadcastRoomUserCount(socket.currentRoom);
+        }
+
+        // Join new room
+        socket.join(roomId);
+        socket.currentRoom = roomId;
+
+        // Increment room user count
+        roomUserCounts[roomId] = (roomUserCounts[roomId] || 0) + 1;
+        broadcastRoomUserCount(roomId);
+
+        const room = rooms[roomId];
+        let role = 'viewer';
+        if (key === room.keys.admin) role = 'admin';
+        else if (key === room.keys.A) role = 'A';
+        else if (key === room.keys.B) role = 'B';
+        socket.emit('role_assigned', role);
+        const { keys, timerHandle, ...safe } = room;
+        socket.emit('update_state', safe);
+
+    });
+
+    socket.on('team_ready', ({ roomId, key }) => {
+        const room = rooms[roomId];
+        if (!room || room.finished || !room.useTimer) return;
+        let role = null;
+        if (key === room.keys.A) role = 'A';
+        else if (key === room.keys.B) role = 'B';
+        if (role && !room.ready[role]) {
+            room.ready[role] = true;
+            const teamName = role === 'A' ? room.teamA : room.teamB;
+            room.logs.push(`[READY] ${teamName} is Ready`);
+
+            // Send webhook for team ready
+            notifyWebhook(roomId, 'ready', { team: teamName });
+
+            const coinFlipDone = !room.useCoinFlip || (room.coinFlip && room.coinFlip.status === 'done');
+            if (room.ready.A && room.ready.B && coinFlipDone) {
+                room.logs.push(`[SYSTEM] Both teams ready! Timer started.`);
+                startTurnTimer(roomId);
             }
-            room.lastPickedMap = null;
-            room.step++;
+            saveHistory(roomId);
+            const { keys, timerHandle, ...safe } = room;
+            io.to(roomId).emit('update_state', safe);
         }
-    }
+    });
 
-    if (room.useTimer) {
-        if (room.timerHandle) { clearTimeout(room.timerHandle); room.timerEndsAt = null; }
-        if (!room.finished && room.ready.A && room.ready.B) { startTurnTimer(roomId); }
-    }
-    checkMatchEnd(room);
-    saveHistory(roomId);
-    const { keys, timerHandle, ...safe } = room;
-    io.to(roomId).emit('update_state', safe);
-  });
+    socket.on('coin_call', ({ roomId, call, key }) => {
+        const room = rooms[roomId];
+        if (!room || !room.useCoinFlip || !room.coinFlip || room.coinFlip.status !== 'waiting_call') return;
+        if (key !== room.keys.A) return;
 
-  socket.on('admin_reset_match', ({ roomId, secret }) => {
-      const room = rooms[roomId];
-      if (!room || secret !== MASTER_SECRET) return;
-      if (room.timerHandle) clearTimeout(room.timerHandle);
-      room.step = 0;
-      room.logs = [`[ADMIN] Match reset by Admin`];
-      room.finished = false;
-      room.lastPickedMap = null;
-      room.playedMaps = [];
-      room.timerEndsAt = null;
-      room.ready = { A: false, B: false };
-      // Preserve timerDuration when resetting
-      if (!room.timerDuration) room.timerDuration = 60;
-      room.coinFlip = room.useCoinFlip ? { status: 'waiting_call', winner: null, result: null } : null;
-      room.maps.forEach(m => { m.status = 'available'; m.pickedBy = null; m.side = null; });
-      saveHistory(roomId);
-      const { keys, timerHandle, ...safe } = room;
-      io.to(roomId).emit('update_state', safe);
-  });
+        const result = crypto.randomInt(0, 2) === 0 ? 'heads' : 'tails';
+        const winner = (call === result) ? 'A' : 'B';
 
-  socket.on('admin_undo_step', ({ roomId, secret }) => {
-      const room = rooms[roomId];
-      if (!room || secret !== MASTER_SECRET || room.step === 0) return;
-      if (room.timerHandle) clearTimeout(room.timerHandle);
-      room.timerEndsAt = null;
-      room.step--;
-      if (room.finished) room.finished = false;
-      const lastLog = room.logs[room.logs.length - 1];
-      if (!lastLog) return; // Safety check: no logs to undo
-      if (lastLog.includes('(') && lastLog.includes('side for')) {
-          const splitIdx = lastLog.indexOf('(');
-          const mapNameMatch = lastLog.match(/side for (.*?)\)/);
-          if (mapNameMatch) {
-              const mapName = mapNameMatch[1];
-              const map = room.maps.find(m => m.name === mapName);
-              if (map) map.side = null;
-              room.logs[room.logs.length - 1] = lastLog.substring(0, splitIdx).trim();
-              room.lastPickedMap = mapName;
-          }
-      } else {
-          room.logs.pop();
-          let mapName = null;
-          for (const m of room.maps) { if (lastLog.includes(m.name)) { mapName = m.name; break; } }
-          if (mapName) {
-              const map = room.maps.find(m => m.name === mapName);
-              if (map) {
-                  if (lastLog.includes('[BAN]')) map.status = 'available';
-                  if (lastLog.includes('[PICK]')) { map.status = 'available'; map.pickedBy = null; room.playedMaps = room.playedMaps.filter(p => p !== mapName); }
-                  if (lastLog.includes('[DECIDER]')) { map.status = 'available'; map.side = null; room.playedMaps = room.playedMaps.filter(p => p !== mapName); }
-                  if (lastLog.includes('[SIDE]') || lastLog.includes('[AUTO-SIDE]')) { map.side = null; room.lastPickedMap = mapName; }
-              }
-          }
-      }
-      if (room.useTimer && room.ready.A && room.ready.B && !room.finished) { startTurnTimer(roomId); }
-      saveHistory(roomId);
-      const { keys, timerHandle, ...safe } = room;
-      io.to(roomId).emit('update_state', safe);
-  });
+        room.coinFlip.result = result;
+        room.coinFlip.winner = winner;
+        room.coinFlip.status = 'deciding';
 
-  // Cleanup on disconnect (prevents memory leaks)
-  socket.on('disconnect', () => {
-      // Decrement room user count if socket was in a room
-      if (socket.currentRoom) {
-          roomUserCounts[socket.currentRoom] = Math.max(0, (roomUserCounts[socket.currentRoom] || 0) - 1);
-          broadcastRoomUserCount(socket.currentRoom);
-      }
-      
-      // Decrement total user count on disconnect
-      connectedUsers = Math.max(0, connectedUsers - 1);
-      broadcastUserCount();
-      // Note: We don't clean up timers here because multiple users can be in the same room
-      // Timers are cleaned up when rooms are deleted or matches finish
-  });
+        const winnerName = winner === 'A' ? room.teamA : room.teamB;
+        room.logs.push(`[COIN] ${room.teamA} called ${call.toUpperCase()}. Result: ${result.toUpperCase()}. Winner: ${winnerName}`);
+
+        // Send webhook for coin flip result
+        notifyWebhook(roomId, 'coin_flip', { result, winner: winnerName });
+
+        saveHistory(roomId);
+        const { keys, timerHandle, ...safe } = room;
+        io.to(roomId).emit('update_state', safe);
+    });
+
+    socket.on('coin_decision', ({ roomId, decision, key }) => {
+        // decision: 'first' (We Start) or 'second' (They Start)
+        const room = rooms[roomId];
+        if (!room || !room.useCoinFlip || room.coinFlip.status !== 'deciding') return;
+        const winner = room.coinFlip.winner;
+        if (key !== room.keys[winner]) return;
+
+        let swapSequence = false;
+        // Default: A starts.
+        // If A is winner and picks 'second', B starts (swap).
+        // If B is winner and picks 'first', B starts (swap).
+        if (winner === 'A' && decision === 'second') swapSequence = true;
+        if (winner === 'B' && decision === 'first') swapSequence = true;
+
+        if (swapSequence) {
+            room.sequence = room.sequence.map(step => {
+                if (step.t === 'A') return { ...step, t: 'B' };
+                if (step.t === 'B') return { ...step, t: 'A' };
+                return step;
+            });
+        }
+
+        // FIXED LOGIC: Base log on the DECISION, not the swap
+        const winnerName = winner === 'A' ? room.teamA : room.teamB;
+        if (decision === 'first') {
+            room.logs.push(`[COIN] ${winnerName} chose to start first.`);
+        } else {
+            room.logs.push(`[COIN] ${winnerName} chose to let opponent start.`);
+        }
+
+        room.coinFlip.status = 'done';
+        if (room.useTimer && room.ready.A && room.ready.B) { startTurnTimer(roomId); }
+        saveHistory(roomId);
+        const { keys, timerHandle, ...safe } = room;
+        io.to(roomId).emit('update_state', safe);
+    });
+
+    socket.on('action', ({ roomId, data, key }) => {
+        const room = rooms[roomId];
+        if (!room || room.finished) return;
+        if (room.useTimer && (!room.ready.A || !room.ready.B)) return;
+        if (room.useCoinFlip && (!room.coinFlip || room.coinFlip.status !== 'done')) return;
+
+        const currentStep = room.sequence[room.step];
+        if (!currentStep) return; // Safety check: step might be undefined
+        if (currentStep.t !== 'System' && key !== room.keys.admin && key !== room.keys[currentStep.t]) return;
+
+        if (currentStep.a === 'ban' || currentStep.a === 'pick') {
+            const idx = room.maps.findIndex(m => m.name === data);
+            if (idx === -1 || room.maps[idx].status !== 'available') return;
+            const map = room.maps[idx];
+            const teamName = currentStep.t === 'A' ? room.teamA : room.teamB;
+
+            if (currentStep.a === 'ban') {
+                map.status = 'banned';
+                room.logs.push(`[BAN] ${teamName} banned ${map.name}`);
+
+                // Send webhook for ban
+                notifyWebhook(roomId, 'ban', { mapName: map.name, team: teamName });
+            } else {
+                map.status = 'picked';
+                map.pickedBy = currentStep.t;
+                room.lastPickedMap = map.name;
+                room.playedMaps.push(map.name);
+                room.logs.push(`[PICK] ${teamName} picked ${map.name}`);
+
+                // Send webhook for pick (side will be added later)
+                notifyWebhook(roomId, 'pick', { mapName: map.name, team: teamName, side: null });
+            }
+            room.step++;
+        } else if (currentStep.a === 'side') {
+            let target = room.lastPickedMap;
+            if (!target) { const d = room.maps.find(m => m.status === 'available'); if (d) target = d.name; }
+            const idx = room.maps.findIndex(m => m.name === target);
+            if (idx !== -1) {
+                room.maps[idx].side = data;
+                const teamName = currentStep.t === 'A' ? room.teamA : room.teamB;
+                const lastLogIndex = room.logs.length - 1;
+                const lastLog = room.logs[lastLogIndex];
+                if (lastLog && lastLog.includes(`picked ${target}`)) {
+                    room.logs[lastLogIndex] = `${lastLog} (${teamName} chose ${data} side for ${target})`;
+                } else {
+                    room.logs.push(`[SIDE] ${teamName} chose ${data} side for ${target}`);
+                }
+
+                // Send webhook for side selection
+                notifyWebhook(roomId, 'side', { mapName: target, team: teamName, side: data });
+
+                room.lastPickedMap = null;
+                room.step++;
+            }
+        }
+
+        if (room.useTimer) {
+            if (room.timerHandle) { clearTimeout(room.timerHandle); room.timerEndsAt = null; }
+            if (!room.finished && room.ready.A && room.ready.B) { startTurnTimer(roomId); }
+        }
+        checkMatchEnd(room);
+
+        // Send webhook if match just finished
+        if (room.finished) {
+            notifyWebhook(roomId, 'match_complete', {});
+        }
+
+        saveHistory(roomId);
+        const { keys, timerHandle, ...safe } = room;
+        io.to(roomId).emit('update_state', safe);
+    });
+
+    socket.on('admin_reset_match', ({ roomId, secret }) => {
+        const room = rooms[roomId];
+        if (!room || secret !== MASTER_SECRET) return;
+        if (room.timerHandle) clearTimeout(room.timerHandle);
+        room.step = 0;
+        room.logs = [`[ADMIN] Match reset by Admin`];
+        room.finished = false;
+        room.lastPickedMap = null;
+        room.playedMaps = [];
+        room.timerEndsAt = null;
+        room.ready = { A: false, B: false };
+        // Preserve timerDuration when resetting
+        if (!room.timerDuration) room.timerDuration = 60;
+        room.coinFlip = room.useCoinFlip ? { status: 'waiting_call', winner: null, result: null } : null;
+        room.maps.forEach(m => { m.status = 'available'; m.pickedBy = null; m.side = null; });
+        saveHistory(roomId);
+        const { keys, timerHandle, ...safe } = room;
+        io.to(roomId).emit('update_state', safe);
+    });
+
+    socket.on('admin_undo_step', ({ roomId, secret }) => {
+        const room = rooms[roomId];
+        if (!room || secret !== MASTER_SECRET || room.step === 0) return;
+        if (room.timerHandle) clearTimeout(room.timerHandle);
+        room.timerEndsAt = null;
+        room.step--;
+        if (room.finished) room.finished = false;
+        const lastLog = room.logs[room.logs.length - 1];
+        if (!lastLog) return; // Safety check: no logs to undo
+        if (lastLog.includes('(') && lastLog.includes('side for')) {
+            const splitIdx = lastLog.indexOf('(');
+            const mapNameMatch = lastLog.match(/side for (.*?)\)/);
+            if (mapNameMatch) {
+                const mapName = mapNameMatch[1];
+                const map = room.maps.find(m => m.name === mapName);
+                if (map) map.side = null;
+                room.logs[room.logs.length - 1] = lastLog.substring(0, splitIdx).trim();
+                room.lastPickedMap = mapName;
+            }
+        } else {
+            room.logs.pop();
+            let mapName = null;
+            for (const m of room.maps) { if (lastLog.includes(m.name)) { mapName = m.name; break; } }
+            if (mapName) {
+                const map = room.maps.find(m => m.name === mapName);
+                if (map) {
+                    if (lastLog.includes('[BAN]')) map.status = 'available';
+                    if (lastLog.includes('[PICK]')) { map.status = 'available'; map.pickedBy = null; room.playedMaps = room.playedMaps.filter(p => p !== mapName); }
+                    if (lastLog.includes('[DECIDER]')) { map.status = 'available'; map.side = null; room.playedMaps = room.playedMaps.filter(p => p !== mapName); }
+                    if (lastLog.includes('[SIDE]') || lastLog.includes('[AUTO-SIDE]')) { map.side = null; room.lastPickedMap = mapName; }
+                }
+            }
+        }
+        if (room.useTimer && room.ready.A && room.ready.B && !room.finished) { startTurnTimer(roomId); }
+        saveHistory(roomId);
+        const { keys, timerHandle, ...safe } = room;
+        io.to(roomId).emit('update_state', safe);
+    });
+
+    // Cleanup on disconnect (prevents memory leaks)
+    socket.on('disconnect', () => {
+        // Decrement room user count if socket was in a room
+        if (socket.currentRoom) {
+            roomUserCounts[socket.currentRoom] = Math.max(0, (roomUserCounts[socket.currentRoom] || 0) - 1);
+            broadcastRoomUserCount(socket.currentRoom);
+        }
+
+        // Decrement total user count on disconnect
+        connectedUsers = Math.max(0, connectedUsers - 1);
+        broadcastUserCount();
+        // Note: We don't clean up timers here because multiple users can be in the same room
+        // Timers are cleaned up when rooms are deleted or matches finish
+    });
 });
 
-server.listen(3001, () => {});
+server.listen(3001, () => { });

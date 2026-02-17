@@ -39,7 +39,8 @@ function initDatabase() {
                     timerDuration INTEGER NOT NULL DEFAULT 60,
                     useCoinFlip INTEGER NOT NULL DEFAULT 0,
                     coinFlip TEXT,
-                    keys_data TEXT NOT NULL
+                    keys_data TEXT NOT NULL,
+                    tempWebhookUrl TEXT
                 )
             `, (err) => {
                 if (err) {
@@ -65,15 +66,15 @@ function saveMatch(match) {
         const {
             id, date, teamA, teamB, teamALogo, teamBLogo, format,
             sequence, step, maps, logs, finished, lastPickedMap, playedMaps,
-            useTimer, ready, timerEndsAt, timerDuration, useCoinFlip, coinFlip, keys
+            useTimer, ready, timerEndsAt, timerDuration, useCoinFlip, coinFlip, keys, tempWebhookUrl
         } = match;
 
         const query = `
             INSERT OR REPLACE INTO match_history (
                 id, date, teamA, teamB, teamALogo, teamBLogo, format,
                 sequence, step, maps, logs, finished, lastPickedMap, playedMaps,
-                useTimer, ready, timerEndsAt, timerDuration, useCoinFlip, coinFlip, keys_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                useTimer, ready, timerEndsAt, timerDuration, useCoinFlip, coinFlip, keys_data, tempWebhookUrl
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         db.run(query, [
@@ -82,7 +83,8 @@ function saveMatch(match) {
             finished ? 1 : 0, lastPickedMap || null, JSON.stringify(playedMaps),
             useTimer ? 1 : 0, JSON.stringify(ready), timerEndsAt || null,
             timerDuration || 60, useCoinFlip ? 1 : 0,
-            coinFlip ? JSON.stringify(coinFlip) : null, JSON.stringify(keys)
+            coinFlip ? JSON.stringify(coinFlip) : null, JSON.stringify(keys),
+            tempWebhookUrl || null
         ], (err) => {
             if (err) {
                 console.error('[DB] Error saving match:', err);
@@ -130,7 +132,8 @@ function loadAllMatches() {
                 timerDuration: row.timerDuration || 60,
                 useCoinFlip: row.useCoinFlip === 1,
                 coinFlip: row.coinFlip ? JSON.parse(row.coinFlip) : null,
-                keys: JSON.parse(row.keys_data)
+                keys: JSON.parse(row.keys_data),
+                tempWebhookUrl: row.tempWebhookUrl
             }));
 
             resolve(matches);
@@ -181,7 +184,8 @@ function getPaginatedMatches(page = 1, limit = 10) {
                             logs: JSON.parse(logs),
                             ready: JSON.parse(ready),
                             playedMaps: JSON.parse(playedMaps),
-                            coinFlip: coinFlip ? JSON.parse(coinFlip) : null
+                            coinFlip: coinFlip ? JSON.parse(coinFlip) : null,
+                            tempWebhookUrl: rest.tempWebhookUrl
                         };
                     });
 
@@ -225,7 +229,8 @@ function getAllMatches() {
                     ready: JSON.parse(ready),
                     playedMaps: JSON.parse(playedMaps),
                     coinFlip: coinFlip ? JSON.parse(coinFlip) : null,
-                    keys: JSON.parse(keys_data)
+                    keys: JSON.parse(keys_data),
+                    tempWebhookUrl: rest.tempWebhookUrl
                 };
             });
 
