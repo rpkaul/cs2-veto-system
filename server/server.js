@@ -73,7 +73,7 @@ function authenticateToken(req, res, next) {
         req.user = decoded;
         next();
     } catch (err) {
-        return res.status(403).json({ error: 'Invalid or expired token' });
+        return res.status(401).json({ error: 'Invalid or expired token' });
     }
 }
 
@@ -426,7 +426,7 @@ app.get('/api/history', async (req, res) => {
 app.get('/api/maps', (req, res) => res.json(activeMaps));
 
 // ==================== ADMIN ROUTES (JWT protected) ====================
-app.post('/api/admin/history', authenticateToken, requirePermission('view_history'), async (req, res) => {
+app.post('/api/admin/history', authenticateToken, async (req, res) => {
     try {
         // Combine in-memory active rooms with database matches
         const activeMatches = Object.values(rooms).map(({ timerHandle, ...keep }) => keep);
@@ -474,7 +474,7 @@ app.post('/api/admin/reset', authenticateToken, requirePermission('nuke_history'
     res.json({ success: true });
 });
 
-app.post('/api/admin/maps/get', authenticateToken, requirePermission('manage_maps'), (req, res) => {
+app.post('/api/admin/maps/get', authenticateToken, (req, res) => {
     res.json(activeMaps);
 });
 
@@ -485,7 +485,7 @@ app.post('/api/admin/maps/update', authenticateToken, requirePermission('manage_
     res.json({ success: true, maps: activeMaps });
 });
 
-app.post('/api/admin/webhook/get', authenticateToken, requirePermission('manage_webhook'), async (req, res) => {
+app.post('/api/admin/webhook/get', authenticateToken, async (req, res) => {
     try {
         const webhookUrl = await settings.getAdminWebhook();
         res.json({ webhookUrl: webhookUrl || '' });

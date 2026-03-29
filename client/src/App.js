@@ -868,7 +868,7 @@ export default function App() {
         setAdminLoginError('');
         fetch(`${SOCKET_URL}/api/admin/history`, { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } })
             .then(res => {
-                if (res.status === 401 || res.status === 403) {
+                if (res.status === 401) {
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('currentUser');
                     setIsAdminAuthenticated(false);
@@ -933,30 +933,43 @@ export default function App() {
             const savedToken = localStorage.getItem('authToken');
             const savedUser = localStorage.getItem('currentUser');
             if (savedToken && savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    setAuthToken(savedToken);
-                    setCurrentUser(user);
-                    fetchAdminHistory(savedToken);
-                    fetchMapPool(savedToken);
-                    // Load admin webhook
-                    fetch(`${SOCKET_URL}/api/admin/webhook/get`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedToken}` }
+                // Validate saved token first with /api/auth/me
+                fetch(`${SOCKET_URL}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${savedToken}` }
+                })
+                    .then(r => {
+                        if (!r.ok) throw new Error('Token invalid');
+                        return r.json();
                     })
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.webhookUrl) setAdminWebhook(data.webhookUrl);
+                    .then(user => {
+                        setAuthToken(savedToken);
+                        setCurrentUser(user);
+                        setIsAdminAuthenticated(true);
+                        fetchAdminHistory(savedToken);
+                        fetchMapPool(savedToken);
+                        // Load admin webhook
+                        fetch(`${SOCKET_URL}/api/admin/webhook/get`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedToken}` }
                         })
-                        .catch(() => { });
-                    if (user.role === 'super_admin') {
-                        fetchUsers(savedToken);
-                        fetchPermissions(savedToken);
-                    }
-                } catch (e) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('currentUser');
-                }
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.webhookUrl) setAdminWebhook(data.webhookUrl);
+                            })
+                            .catch(() => { });
+                        if (user.role === 'super_admin') {
+                            fetchUsers(savedToken);
+                            fetchPermissions(savedToken);
+                        }
+                    })
+                    .catch(() => {
+                        // Token is invalid/expired — silently clear and show login form
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUser');
+                        setAuthToken('');
+                        setCurrentUser(null);
+                        setIsAdminAuthenticated(false);
+                    });
             }
         }
 
