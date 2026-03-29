@@ -12,6 +12,7 @@ code {
     monospace;
 }
 
+/* ===== KEYFRAMES ===== */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -21,4 +22,577 @@ code {
     opacity: 0.7;
     transform: scale(1.1);
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slideInRight {
+  0% { opacity: 0; transform: translateX(30px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.2); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* ===== SCROLLBAR STYLES ===== */
+.admin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+}
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.3);
+  border-radius: 3px;
+}
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.5);
+}
+
+/* ===== ADMIN LOGIN STYLES ===== */
+.admin-login-input {
+  display: block;
+  width: 100%;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 3px;
+  text-align: center;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  outline: none;
+}
+.admin-login-input:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+  background: rgba(0, 0, 0, 0.7);
+}
+.admin-login-input.error {
+  border-color: #ff4444;
+  animation: shake 0.5s ease;
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.15);
+}
+
+.admin-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.05));
+  border: 2px solid #00d4ff;
+  border-radius: 12px;
+  color: #00d4ff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+.admin-login-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.25), rgba(0, 212, 255, 0.1));
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+  transform: translateY(-1px);
+}
+.admin-login-btn:active {
+  transform: translateY(1px);
+}
+.admin-login-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== ADMIN PANEL SECTION CARDS ===== */
+.admin-section {
+  background: linear-gradient(145deg, #0f1219 0%, #0a0d14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+.admin-section:hover {
+  border-color: rgba(0, 212, 255, 0.15);
+}
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.admin-section-header h3 {
+  color: #fff;
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  font-family: 'Rajdhani', sans-serif;
+}
+.admin-section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+/* ===== ADMIN INPUT FIELDS ===== */
+.admin-input {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 1px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  outline: none;
+  margin-bottom: 10px;
+}
+.admin-input:focus {
+  border-color: rgba(0, 212, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.08);
+  background: rgba(0, 0, 0, 0.6);
+}
+.admin-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ===== HISTORY CARDS ===== */
+.history-card {
+  background: linear-gradient(145deg, #161b22 0%, #0f1219 100%);
+  margin-bottom: 10px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border-left: 4px solid #333;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.3s ease-out;
+}
+.history-card:hover {
+  background: linear-gradient(145deg, #1c2230 0%, #131822 100%);
+  transform: translateX(2px);
+}
+.history-card.active {
+  border-left-color: #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.05);
+}
+.history-card.finished {
+  border-left-color: #333;
+  opacity: 0.7;
+}
+.history-card.finished:hover {
+  opacity: 0.9;
+}
+
+/* ===== ADMIN ACTION BUTTONS ===== */
+.admin-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+.admin-action-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.admin-action-btn.undo { color: #ffa500; }
+.admin-action-btn.undo:hover { background: rgba(255, 165, 0, 0.1); }
+.admin-action-btn.reset { color: #00d4ff; }
+.admin-action-btn.reset:hover { background: rgba(0, 212, 255, 0.1); }
+.admin-action-btn.delete { color: #ff4444; }
+.admin-action-btn.delete:hover { background: rgba(255, 68, 68, 0.1); }
+
+/* ===== FORMAT BADGES ===== */
+.format-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Rajdhani', sans-serif;
+}
+.format-badge.bo1 {
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+.format-badge.bo3 {
+  background: rgba(255, 165, 0, 0.15);
+  color: #ffa500;
+  border: 1px solid rgba(255, 165, 0, 0.3);
+}
+.format-badge.bo5 {
+  background: rgba(255, 0, 85, 0.15);
+  color: #ff0055;
+  border: 1px solid rgba(255, 0, 85, 0.3);
+}
+
+/* ===== MAP POOL CHIPS ===== */
+.map-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+.map-chip:hover {
+  border-color: rgba(0, 212, 255, 0.3);
+  background: rgba(0, 212, 255, 0.05);
+}
+.map-chip .map-name {
+  font-size: 0.85rem;
+  color: #ccc;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 1px;
+}
+.map-chip .map-name.custom {
+  color: #00d4ff;
+}
+.map-chip .delete-btn {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ff4444;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+.map-chip .delete-btn:hover {
+  background: rgba(255, 68, 68, 0.15);
+}
+
+/* ===== NUKE BUTTON ===== */
+.nuke-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  color: rgba(255, 68, 68, 0.6);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+}
+.nuke-btn:hover {
+  background: rgba(255, 68, 68, 0.08);
+  border-color: rgba(255, 68, 68, 0.5);
+  color: #ff4444;
+}
+
+/* ===== MATCH LINK BADGES ===== */
+.match-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  transition: all 0.2s ease;
+  border: 1px solid;
+}
+.match-link-btn.open {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+}
+.match-link-btn.open:hover {
+  background: rgba(0, 212, 255, 0.2);
+}
+.match-link-btn.copy {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+}
+.match-link-btn.copy:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* ===== WEBHOOK BUTTONS ===== */
+.webhook-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+.webhook-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+.webhook-btn.save {
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  color: #000;
+}
+.webhook-btn.test {
+  background: linear-gradient(135deg, #ffa500, #cc8400);
+  color: #000;
+}
+.webhook-btn.clear {
+  background: transparent;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+}
+.webhook-btn.clear:hover {
+  background: rgba(255, 68, 68, 0.08);
+}
+
+/* ===== QUICK CREATE MODE BUTTONS ===== */
+.create-mode-btn {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+.create-mode-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+.create-mode-btn.bo1 {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: #00d4ff;
+  color: #00d4ff;
+}
+.create-mode-btn.bo3 {
+  background: rgba(255, 165, 0, 0.1);
+  border-color: #ffa500;
+  color: #ffa500;
+}
+.create-mode-btn.bo5 {
+  background: rgba(255, 0, 85, 0.1);
+  border-color: #ff0055;
+  color: #ff0055;
+}
+
+/* ===== GENERATED LINKS BOX ===== */
+.generated-links {
+  margin-top: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  border-radius: 10px;
+  padding: 16px;
+  animation: fadeIn 0.3s ease-out;
+}
+.generated-link-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.generated-link-row:last-child {
+  border-bottom: none;
+}
+.generated-link-row:hover {
+  background: rgba(0, 212, 255, 0.03);
+  padding-left: 5px;
+}
+.generated-link-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  min-width: 60px;
+}
+.generated-link-url {
+  font-size: 0.8rem;
+  color: #888;
+  word-break: break-all;
+  flex: 1;
+}
+
+/* ===== TOP NAV BAR ===== */
+.admin-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: rgba(5, 7, 10, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 100;
+}
+
+/* ===== CHECKBOX CUSTOM ===== */
+.admin-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #aaa;
+  font-size: 0.9rem;
+  font-family: 'Rajdhani', sans-serif;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.admin-checkbox:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.admin-checkbox input[type="checkbox"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.admin-checkbox input[type="checkbox"]:checked {
+  background: #00d4ff;
+  border-color: #00d4ff;
+}
+.admin-checkbox input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -1px;
+  left: 2px;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+}
+.admin-checkbox.gold {
+  color: #ffd700;
+}
+.admin-checkbox.gold input[type="checkbox"]:checked {
+  background: #ffd700;
+  border-color: #ffd700;
+}
+
+/* ===== PUBLIC PAGE STYLES ===== */
+
+body {
+  background: #0a0a12;
+  margin: 0;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* Minimal scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Input focus - subtle white glow */
+input:focus {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+}
+
+/* Button base */
+button {
+  transition: all 0.15s ease;
+}
+button:active {
+  transform: scale(0.97);
+}
+
+/* Sidebar button hover */
+button:hover {
+  opacity: 0.85;
+}
+
+@keyframes tooltipFade {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
 }

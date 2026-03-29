@@ -306,8 +306,17 @@ const UndoIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="no
 
 // --- ANIMATED BACKGROUND ---
 const AnimatedBackground = () => (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, background: 'radial-gradient(circle at center, #1b2838 0%, #0b0f19 100%)' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '200%', height: '200%', backgroundImage: 'linear-gradient(rgba(18,16,16,0) 50%,rgba(0,0,0,0.25) 50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(255,0,0,0.03))', backgroundSize: '100% 2px, 3px 100%', animation: 'scanline 10s linear infinite' }} />
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, background: 'linear-gradient(160deg, #0a0a12 0%, #0d1117 40%, #0a0e1a 100%)' }}>
+        {/* Diagonal accent line */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', opacity: 0.4 }}>
+            <div style={{ position: 'absolute', top: '-50%', left: '60%', width: '1px', height: '200%', background: 'linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.15) 30%, rgba(168, 85, 247, 0.1) 50%, transparent 70%)', transform: 'rotate(-35deg)', transformOrigin: 'top' }} />
+            <div style={{ position: 'absolute', top: '-50%', left: '30%', width: '1px', height: '200%', background: 'linear-gradient(180deg, transparent 0%, rgba(255, 0, 85, 0.08) 40%, transparent 60%)', transform: 'rotate(-35deg)', transformOrigin: 'top' }} />
+        </div>
+        {/* Corner accent */}
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '40%', background: 'radial-gradient(ellipse at top right, rgba(0, 212, 255, 0.03) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '40%', height: '40%', background: 'radial-gradient(ellipse at bottom left, rgba(255, 0, 85, 0.02) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        {/* Dot grid */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.5 }} />
     </div>
 );
 
@@ -442,14 +451,14 @@ const MapCard = ({ map, isInteractive, onMouseEnter, onMouseLeave, onClick, acti
     const cardStyle = {
         ...styles.mapCard,
         backgroundImage: imageFailed
-            ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+            ? 'linear-gradient(135deg, #0d0f18 0%, #111422 50%, #0a0e1a 100%)'
             : `linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%), url(${imageUrl})${fallbackUrls}`,
-        opacity: map.status === 'banned' ? 0.3 : 1,
-        filter: map.status === 'banned' ? 'grayscale(100%)' : 'none',
-        border: map.status === 'picked' ? '3px solid #00ff00' : map.status === 'decider' ? '3px solid #ffa500' : isInteractive ? `2px solid ${actionColor}` : '1px solid rgba(255,255,255,0.1)',
+        opacity: map.status === 'banned' ? 0.25 : 1,
+        filter: map.status === 'banned' ? 'grayscale(100%) brightness(0.6)' : 'none',
+        border: map.status === 'picked' ? '2px solid rgba(0, 255, 136, 0.5)' : map.status === 'decider' ? '2px solid rgba(255, 165, 0, 0.5)' : isInteractive ? `1px solid ${actionColor}44` : '1px solid rgba(255,255,255,0.04)',
         cursor: (map.status === 'available' && isInteractive) ? 'pointer' : 'default',
-        boxShadow: (isInteractive && isHovered) ? `0 0 20px ${actionColor}` : '0 5px 15px rgba(0,0,0,0.5)',
-        transform: (isInteractive && isHovered) ? 'scale(1.05) translateY(-5px)' : 'scale(1)',
+        boxShadow: (isInteractive && isHovered) ? `0 8px 24px ${actionColor}22, 0 0 0 1px ${actionColor}33` : map.status === 'picked' ? '0 4px 20px rgba(0,255,136,0.08)' : '0 4px 12px rgba(0,0,0,0.4)',
+        transform: (isInteractive && isHovered) ? 'scale(1.04) translateY(-4px)' : 'scale(1)',
         position: 'relative'
     };
 
@@ -567,12 +576,18 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide, soundEnabled = t
     const isWinner = myRole === gameState.coinFlip.winner;
 
     return (
-        // FIXED: Flat Slate Blue Background (#1e293b) - Not Black
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: '#1e293b', zIndex: 3000, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: '#0a0a12', zIndex: 3000, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
+            {/* Subtle background accents */}
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(255,215,0,0.03) 0%, transparent 70%)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(0,212,255,0.03) 0%, transparent 70%)', borderRadius: '50%' }} />
+                {/* Dot grid */}
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+            </div>
             <style>
                 {flipAnimation && `
                     @keyframes coinFlip3D {
-                        0% { 
+                        0% {
                             transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1);
                             filter: brightness(1);
                         }
@@ -588,7 +603,7 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide, soundEnabled = t
                             transform: rotateY(${flipAnimation.rotations * 0.75}deg) rotateX(${flipAnimation.xAxis * 0.5}deg) rotateZ(${flipAnimation.zAxis * 0.5}deg) scale(1.05);
                             filter: brightness(1.2);
                         }
-                        100% { 
+                        100% {
                             transform: rotateY(${flipAnimation.rotations}deg) rotateX(0deg) rotateZ(0deg) scale(1);
                             filter: brightness(1);
                         }
@@ -596,34 +611,25 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide, soundEnabled = t
                     
                     @keyframes coinShadow {
                         0%, 100% {
-                            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 
-                                        0 0 50px rgba(255, 215, 0, 0.3),
-                                        inset 0 0 20px rgba(255, 255, 255, 0.1),
-                                        0 0 0 0 rgba(255, 215, 0, 0);
-                        }
-                        25%, 75% {
-                            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3), 
-                                        0 0 80px rgba(255, 215, 0, 0.6),
-                                        inset 0 0 30px rgba(255, 255, 255, 0.2),
-                                        0 0 40px 10px rgba(255, 215, 0, 0.3);
+                            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+                                        0 0 50px rgba(255, 215, 0, 0.15),
+                                        inset 0 0 20px rgba(255, 255, 255, 0.05);
                         }
                         50% {
-                            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 
-                                        0 0 100px rgba(255, 215, 0, 0.8),
-                                        inset 0 0 40px rgba(255, 255, 255, 0.3),
-                                        0 0 60px 20px rgba(255, 215, 0, 0.5);
+                            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7),
+                                        0 0 80px rgba(255, 215, 0, 0.3),
+                                        inset 0 0 40px rgba(255, 255, 255, 0.1);
                         }
                     }
                     
                     @keyframes fadeInScale {
-                        0% {
-                            opacity: 0;
-                            transform: scale(0.8);
-                        }
-                        100% {
-                            opacity: 1;
-                            transform: scale(1);
-                        }
+                        0% { opacity: 0; transform: scale(0.8); }
+                        100% { opacity: 1; transform: scale(1); }
+                    }
+
+                    @keyframes subtlePulse {
+                        0%, 100% { opacity: 0.5; }
+                        50% { opacity: 1; }
                     }
                     
                     .coin-3d {
@@ -635,15 +641,29 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide, soundEnabled = t
                 `}
             </style>
 
-            <h1 style={{ color: '#ffd700', fontSize: '3rem', marginBottom: '30px', textShadow: '0 0 20px #ffd700', fontFamily: "'Rajdhani', sans-serif" }}>COIN TOSS</h1>
+            {/* Title */}
+            <div style={{ position: 'relative', zIndex: 1, marginBottom: '40px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: '600', letterSpacing: '6px', color: '#ffd700', marginBottom: '8px', fontFamily: "'Rajdhani', sans-serif" }}>🪙 COIN TOSS</div>
+                <div style={{ width: '40px', height: '2px', background: 'linear-gradient(90deg, transparent, #ffd700, transparent)', margin: '0 auto' }} />
+            </div>
 
             {gameState.coinFlip.status === 'waiting_call' && (
-                <div style={{ textAlign: 'center' }}>
-                    <h2 style={{ color: '#fff', marginBottom: '20px', fontFamily: "'Rajdhani', sans-serif" }}>{isCaller ? "CALL THE TOSS" : `WAITING FOR ${gameState.teamA}...`}</h2>
+                <div style={{ textAlign: 'center', position: 'relative', zIndex: 1, animation: 'fadeIn 0.5s ease' }}>
+                    <h2 style={{ color: '#888', marginBottom: '28px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', letterSpacing: '4px', fontWeight: '600' }}>
+                        {isCaller ? "CALL THE TOSS" : <span>WAITING FOR <span style={{ color: '#00d4ff' }}>{gameState.teamA}</span>...</span>}
+                    </h2>
                     {isCaller && (
-                        <div style={{ display: 'flex', gap: '20px' }}>
-                            <button onClick={() => onCall('heads')} style={{ padding: '20px 40px', fontSize: '1.5rem', background: 'transparent', border: '2px solid #ffd700', color: '#ffd700', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontFamily: "'Rajdhani', sans-serif" }}>HEADS</button>
-                            <button onClick={() => onCall('tails')} style={{ padding: '20px 40px', fontSize: '1.5rem', background: 'transparent', border: '2px solid #fff', color: '#fff', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontFamily: "'Rajdhani', sans-serif" }}>TAILS</button>
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                            <button onClick={() => onCall('heads')} style={{ padding: '18px 48px', fontSize: '1.1rem', background: 'rgba(255, 215, 0, 0.06)', border: '1px solid rgba(255, 215, 0, 0.25)', color: '#ffd700', borderRadius: '12px', cursor: 'pointer', fontWeight: '800', fontFamily: "'Rajdhani', sans-serif", letterSpacing: '3px', transition: 'all 0.3s' }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 215, 0, 0.12)'; e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 215, 0, 0.06)'; e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.25)'; }}>
+                                HEADS
+                            </button>
+                            <button onClick={() => onCall('tails')} style={{ padding: '18px 48px', fontSize: '1.1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', color: '#ccc', borderRadius: '12px', cursor: 'pointer', fontWeight: '800', fontFamily: "'Rajdhani', sans-serif", letterSpacing: '3px', transition: 'all 0.3s' }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>
+                                TAILS
+                            </button>
                         </div>
                     )}
                 </div>
@@ -653,80 +673,57 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide, soundEnabled = t
                 <div style={{
                     perspective: '2000px',
                     perspectiveOrigin: 'center center',
-                    marginBottom: '40px',
+                    marginBottom: '32px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    position: 'relative'
+                    position: 'relative',
+                    zIndex: 1
                 }}>
                     <div
                         className={isFlipping ? 'coin-3d' : ''}
                         style={{
-                            width: '180px',
-                            height: '180px',
+                            width: '140px',
+                            height: '140px',
                             borderRadius: '50%',
-                            border: '6px solid rgba(255, 255, 255, 0.9)',
+                            border: '3px solid rgba(255, 255, 255, 0.15)',
                             background: gameState.coinFlip.result === 'heads'
-                                ? 'radial-gradient(circle at 30% 30%, #ffd700 0%, #ffed4e 30%, #b8860b 70%, #8b6914 100%)'
-                                : 'radial-gradient(circle at 30% 30%, #cbd5e1 0%, #94a3b8 30%, #64748b 70%, #475569 100%)',
+                                ? 'radial-gradient(circle at 30% 30%, #ffd700 0%, #b8860b 70%, #8b6914 100%)'
+                                : 'radial-gradient(circle at 30% 30%, #94a3b8 0%, #64748b 70%, #475569 100%)',
                             marginBottom: '20px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            fontSize: '5rem',
+                            fontSize: '3.5rem',
                             fontWeight: '900',
                             color: '#fff',
-                            textShadow: '0 4px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3)',
+                            textShadow: '0 2px 8px rgba(0,0,0,0.6)',
                             fontFamily: "'Rajdhani', sans-serif",
                             position: 'relative',
                             overflow: 'hidden',
                             transition: isFlipping ? 'none' : 'all 0.5s ease'
                         }}
                     >
-                        {/* 3D depth effect with pseudo-elements */}
-                        <div style={{
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                            borderRadius: '50%',
-                            background: gameState.coinFlip.result === 'heads'
-                                ? 'radial-gradient(circle at 70% 70%, rgba(0,0,0,0.3) 0%, transparent 60%)'
-                                : 'radial-gradient(circle at 70% 70%, rgba(0,0,0,0.4) 0%, transparent 60%)',
-                            pointerEvents: 'none'
-                        }}></div>
-                        <div style={{
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                            borderRadius: '50%',
-                            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 50%)',
-                            pointerEvents: 'none'
-                        }}></div>
-                        <span style={{
-                            position: 'relative',
-                            zIndex: 1,
-                            transform: isFlipping ? 'scale(0.8)' : 'scale(1)',
-                            transition: 'transform 0.3s ease'
-                        }}>
+                        <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'radial-gradient(circle at 70% 70%, rgba(0,0,0,0.3) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%)', pointerEvents: 'none' }} />
+                        <span style={{ position: 'relative', zIndex: 1, transform: isFlipping ? 'scale(0.8)' : 'scale(1)', transition: 'transform 0.3s ease' }}>
                             {isFlipping ? '?' : (gameState.coinFlip.result === 'heads' ? 'H' : 'T')}
                         </span>
                     </div>
 
                     {!isFlipping && (
-                        // FIXED: Black Bold Text on White with smooth fade-in
                         <div style={{
-                            background: '#fff',
-                            color: '#000',
-                            padding: '12px 45px',
-                            borderRadius: '50px',
-                            fontSize: '2.2rem',
-                            fontWeight: '900',
+                            padding: '8px 32px',
+                            borderRadius: '8px',
+                            fontSize: '1.2rem',
+                            fontWeight: '800',
                             textTransform: 'uppercase',
                             fontFamily: "'Rajdhani', sans-serif",
-                            boxShadow: '0 0 30px rgba(255, 255, 255, 0.7), 0 0 60px rgba(255, 215, 0, 0.4)',
-                            animation: 'fadeInScale 0.5s ease-out',
-                            transform: 'scale(1)',
-                            transition: 'all 0.3s ease'
+                            letterSpacing: '4px',
+                            color: gameState.coinFlip.result === 'heads' ? '#ffd700' : '#94a3b8',
+                            background: gameState.coinFlip.result === 'heads' ? 'rgba(255, 215, 0, 0.08)' : 'rgba(148, 163, 184, 0.08)',
+                            border: `1px solid ${gameState.coinFlip.result === 'heads' ? 'rgba(255, 215, 0, 0.2)' : 'rgba(148, 163, 184, 0.2)'}`,
+                            animation: 'fadeInScale 0.5s ease-out'
                         }}>
                             {gameState.coinFlip.result}
                         </div>
@@ -735,13 +732,28 @@ const CoinFlipOverlay = ({ gameState, myRole, onCall, onDecide, soundEnabled = t
             )}
 
             {showResult && gameState.coinFlip.status === 'deciding' && (
-                <div style={{ textAlign: 'center', animation: 'fadeIn 1s' }}>
-                    <h2 style={{ color: '#00ff00', fontSize: '2rem', marginBottom: '10px', fontFamily: "'Rajdhani', sans-serif" }}>{gameState.coinFlip.winner === 'A' ? gameState.teamA : gameState.teamB} WON!</h2>
-                    <h3 style={{ color: '#aaa', marginBottom: '20px', fontFamily: "'Rajdhani', sans-serif" }}>{isWinner ? "CHOOSE WHO BANS FIRST" : "WAITING FOR DECISION..."}</h3>
+                <div style={{ textAlign: 'center', animation: 'fadeIn 0.6s ease', position: 'relative', zIndex: 1 }}>
+                    <div style={{ marginBottom: '8px' }}>
+                        <span style={{ color: gameState.coinFlip.winner === 'A' ? '#00d4ff' : '#ff0055', fontSize: '1.4rem', fontWeight: '800', letterSpacing: '3px', fontFamily: "'Rajdhani', sans-serif" }}>
+                            {gameState.coinFlip.winner === 'A' ? gameState.teamA : gameState.teamB}
+                        </span>
+                        <span style={{ color: '#00ff88', fontSize: '1.4rem', fontWeight: '800', letterSpacing: '3px', fontFamily: "'Rajdhani', sans-serif" }}> WON!</span>
+                    </div>
+                    <div style={{ color: '#555', marginBottom: '28px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', letterSpacing: '3px', fontWeight: '600' }}>
+                        {isWinner ? "CHOOSE WHO BANS FIRST" : "WAITING FOR DECISION..."}
+                    </div>
                     {isWinner && (
-                        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                            <button onClick={() => onDecide('first')} style={{ padding: '15px 30px', background: '#00d4ff', border: 'none', color: '#000', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontFamily: "'Rajdhani', sans-serif" }}>WE START</button>
-                            <button onClick={() => onDecide('second')} style={{ padding: '15px 30px', background: '#ff0055', border: 'none', color: '#fff', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontFamily: "'Rajdhani', sans-serif" }}>THEY START</button>
+                        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                            <button onClick={() => onDecide('first')} style={{ padding: '14px 36px', background: 'rgba(0, 212, 255, 0.08)', border: '1px solid rgba(0, 212, 255, 0.25)', color: '#00d4ff', borderRadius: '10px', cursor: 'pointer', fontWeight: '800', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', letterSpacing: '2px', transition: 'all 0.3s' }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0, 212, 255, 0.08)'; }}>
+                                WE START
+                            </button>
+                            <button onClick={() => onDecide('second')} style={{ padding: '14px 36px', background: 'rgba(255, 0, 85, 0.08)', border: '1px solid rgba(255, 0, 85, 0.25)', color: '#ff0055', borderRadius: '10px', cursor: 'pointer', fontWeight: '800', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', letterSpacing: '2px', transition: 'all 0.3s' }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 0, 85, 0.15)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 0, 85, 0.08)'; }}>
+                                THEY START
+                            </button>
                         </div>
                     )}
                 </div>
@@ -770,8 +782,31 @@ export default function App() {
     const [inputError, setInputError] = useState(false);
 
     const isAdminRoute = window.location.pathname === '/admin';
-    const [adminSecret, setAdminSecret] = useState(localStorage.getItem('adminSecret') || '');
+    // JWT Auth State
+    const [authToken, setAuthToken] = useState(localStorage.getItem('authToken') || '');
+    const [currentUser, setCurrentUser] = useState(null);
     const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+    const [adminLoginError, setAdminLoginError] = useState('');
+    const [adminLoginLoading, setAdminLoginLoading] = useState(false);
+    const [loginUsername, setLoginUsername] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    // Password change modal
+    const [showPasswordChange, setShowPasswordChange] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+    // User management (super_admin only)
+    const [showUserManagement, setShowUserManagement] = useState(false);
+    const [userList, setUserList] = useState([]);
+    const [newUserUsername, setNewUserUsername] = useState('');
+    const [newUserPassword, setNewUserPassword] = useState('');
+    const [newUserRole, setNewUserRole] = useState('admin');
+    const [newUserPermissions, setNewUserPermissions] = useState([]);
+    const [editingUser, setEditingUser] = useState(null);
+    const [userError, setUserError] = useState('');
+    const [allPermissions, setAllPermissions] = useState([]);
 
     const [adminTeamA, setAdminTeamA] = useState('');
     const [adminTeamB, setAdminTeamB] = useState('');
@@ -808,17 +843,69 @@ export default function App() {
     const fileInputA = useRef(null);
     const fileInputB = useRef(null);
 
-    const fetchAdminHistory = useCallback((secret) => {
-        fetch(`${SOCKET_URL}/api/admin/history`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ secret }) })
-            .then(res => res.json()).then(data => {
-                if (data.error) { if (!isAdminRoute) alert(data.error); }
-                else { setHistoryData(data); setIsAdminAuthenticated(true); localStorage.setItem('adminSecret', secret); }
+    // Helper: get auth headers for API calls
+    const getAuthHeaders = useCallback(() => {
+        const token = localStorage.getItem('authToken');
+        return {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        };
+    }, []);
+
+    // Helper: check if user has permission
+    const hasPermission = useCallback((permission) => {
+        if (!currentUser) return false;
+        if (currentUser.role === 'super_admin') return true;
+        return currentUser.permissions && currentUser.permissions.includes(permission);
+    }, [currentUser]);
+
+    const fetchAdminHistory = useCallback((token) => {
+        setAdminLoginLoading(true);
+        setAdminLoginError('');
+        fetch(`${SOCKET_URL}/api/admin/history`, { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } })
+            .then(res => {
+                if (res.status === 401 || res.status === 403) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUser');
+                    setIsAdminAuthenticated(false);
+                    setCurrentUser(null);
+                    setAuthToken('');
+                    setAdminLoginLoading(false);
+                    setAdminLoginError('Session expired. Please login again.');
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                setAdminLoginLoading(false);
+                if (data.error) {
+                    if (isAdminRoute) { setAdminLoginError(data.error); }
+                    else { alert(data.error); }
+                }
+                else { setHistoryData(data); setIsAdminAuthenticated(true); setAdminLoginError(''); }
+            })
+            .catch(() => {
+                setAdminLoginLoading(false);
+                setAdminLoginError('Connection failed. Is the server running?');
             });
     }, [isAdminRoute]);
 
-    const fetchMapPool = useCallback((secret) => {
-        fetch(`${SOCKET_URL}/api/admin/maps/get`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ secret }) })
+    const fetchMapPool = useCallback((token) => {
+        fetch(`${SOCKET_URL}/api/admin/maps/get`, { method: "POST", headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } })
             .then(r => r.json()).then(data => { if (Array.isArray(data)) setMapPool(data); });
+    }, []);
+
+    // Fetch users list (super_admin only)
+    const fetchUsers = useCallback((token) => {
+        fetch(`${SOCKET_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(r => r.json()).then(data => { if (Array.isArray(data)) setUserList(data); });
+    }, []);
+
+    // Fetch permissions list
+    const fetchPermissions = useCallback((token) => {
+        fetch(`${SOCKET_URL}/api/admin/permissions`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(r => r.json()).then(data => { if (Array.isArray(data)) setAllPermissions(data); });
     }, []);
 
     useEffect(() => {
@@ -838,20 +925,35 @@ export default function App() {
             })
             .catch(() => { });
 
-        if (isAdminRoute && adminSecret) {
-            fetchAdminHistory(adminSecret);
-            fetchMapPool(adminSecret);
-            // Load admin webhook
-            fetch(`${SOCKET_URL}/api/admin/webhook/get`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ secret: adminSecret })
-            })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.webhookUrl) setAdminWebhook(data.webhookUrl);
-                })
-                .catch(() => { });
+        if (isAdminRoute) {
+            const savedToken = localStorage.getItem('authToken');
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedToken && savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    setAuthToken(savedToken);
+                    setCurrentUser(user);
+                    fetchAdminHistory(savedToken);
+                    fetchMapPool(savedToken);
+                    // Load admin webhook
+                    fetch(`${SOCKET_URL}/api/admin/webhook/get`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedToken}` }
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.webhookUrl) setAdminWebhook(data.webhookUrl);
+                        })
+                        .catch(() => { });
+                    if (user.role === 'super_admin') {
+                        fetchUsers(savedToken);
+                        fetchPermissions(savedToken);
+                    }
+                } catch (e) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUser');
+                }
+            }
         }
 
         // Listen for total user count updates (works on all pages)
@@ -896,14 +998,15 @@ export default function App() {
 
             if (isAdminRoute) {
                 setAdminLinks(links);
-                fetchAdminHistory(adminSecret);
+                const token = localStorage.getItem('authToken');
+                if (token) fetchAdminHistory(token);
             } else {
                 setTimeout(() => { setIsGenerating(false); setCreatedLinks(links); }, 800);
             }
         });
 
         return () => { socket.off('update_state'); socket.off('role_assigned'); window.removeEventListener('resize', handleResize); };
-    }, [params.room, params.key, isAdminRoute, adminSecret, fetchAdminHistory, fetchMapPool, soundEnabled]);
+    }, [params.room, params.key, isAdminRoute, fetchAdminHistory, fetchMapPool, fetchUsers, fetchPermissions, soundEnabled]);
 
     const handleLogoUpload = (e, team) => {
         const file = e.target.files[0];
@@ -1013,20 +1116,22 @@ export default function App() {
         }
     };
 
-    const updateMapPool = (newMaps) => { fetch(`${SOCKET_URL}/api/admin/maps/update`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ secret: adminSecret, maps: newMaps }) }).then(r => r.json()).then(data => { if (data.success) setMapPool(data.maps); }); };
+    const updateMapPool = (newMaps) => { const token = localStorage.getItem('authToken'); fetch(`${SOCKET_URL}/api/admin/maps/update`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ maps: newMaps }) }).then(r => r.json()).then(data => { if (data.success) setMapPool(data.maps); }); };
     const handleAddMap = () => { if (!newMapName.trim()) return; const newMap = { name: newMapName.trim(), customImage: newMapImage.trim() || null }; updateMapPool([...mapPool, newMap]); setNewMapName(''); setNewMapImage(''); };
     const handleDeleteMap = (idx) => { if (!window.confirm("Remove map?")) return; const updated = [...mapPool]; updated.splice(idx, 1); updateMapPool(updated); };
-    const deleteMatch = (id) => { if (!window.confirm("DELETE?")) return; fetch(`${SOCKET_URL}/api/admin/delete`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, secret: adminSecret }) }).then(res => res.json()).then(data => { if (data.success) fetchAdminHistory(adminSecret); }); };
-    const nukeHistory = () => { if (!window.confirm("DELETE ALL?")) return; fetch(`${SOCKET_URL}/api/admin/reset`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ secret: adminSecret }) }).then(res => res.json()).then(data => { if (data.success) fetchAdminHistory(adminSecret); }); };
+    const deleteMatch = (id) => { if (!window.confirm("DELETE?")) return; const token = localStorage.getItem('authToken'); fetch(`${SOCKET_URL}/api/admin/delete`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ id }) }).then(res => res.json()).then(data => { if (data.success) fetchAdminHistory(token); }); };
+    const nukeHistory = () => { if (!window.confirm("DELETE ALL?")) return; const token = localStorage.getItem('authToken'); fetch(`${SOCKET_URL}/api/admin/reset`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` } }).then(res => res.json()).then(data => { if (data.success) fetchAdminHistory(token); }); };
 
     // --- ADMIN ACTIONS ---
     const handleAdminReset = (roomId) => {
         if (!window.confirm("Reset this match completely?")) return;
-        socket.emit('admin_reset_match', { roomId, secret: adminSecret });
+        const token = localStorage.getItem('authToken');
+        socket.emit('admin_reset_match', { roomId, token });
     };
 
     const handleAdminUndo = (roomId) => {
-        socket.emit('admin_undo_step', { roomId, secret: adminSecret });
+        const token = localStorage.getItem('authToken');
+        socket.emit('admin_undo_step', { roomId, token });
     };
 
     const handleCopyLogs = (text) => { navigator.clipboard.writeText(text).then(() => { setShowNotification(true); setTimeout(() => setShowNotification(false), 3000); }); };
@@ -1123,69 +1228,369 @@ export default function App() {
     // --- RENDER ADMIN ---
     if (isAdminRoute) {
         const activeCount = historyData.filter(m => !m.finished).length;
-        return (
-            <div style={{ ...styles.container, background: '#05070a' }}>
-                <h1 style={{ ...styles.neonTitle, marginTop: '20px', fontSize: '2.5rem' }}>CONTROL PANEL</h1>
-                <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    {/* Total User Count in Admin Panel */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        color: '#00ff00',
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        background: 'rgba(0, 0, 0, 0.6)',
-                        padding: '6px 12px',
-                        borderRadius: '5px',
-                        border: '1px solid #00ff00',
-                        fontFamily: "'Rajdhani', sans-serif"
-                    }}>
-                        <div style={{
-                            width: '10px',
-                            height: '10px',
-                            borderRadius: '50%',
-                            background: '#00ff00',
-                            boxShadow: '0 0 10px #00ff00',
-                            animation: 'pulse 2s infinite'
-                        }}></div>
-                        <span>Total: {userCount}</span>
-                    </div>
-                    <div style={{ color: '#00d4ff', fontSize: '0.9rem', cursor: 'pointer' }} onClick={() => { localStorage.removeItem('adminSecret'); window.location.reload(); }}>LOGOUT</div>
-                </div>
-                <button onClick={goHome} style={{ position: 'absolute', top: '20px', left: '20px', background: 'transparent', border: '1px solid #444', color: '#fff', padding: '5px 10px' }}>← PUBLIC HOME</button>
 
-                {!isAdminAuthenticated ? (
-                    <div style={styles.glassPanel}>
-                        <h3 style={{ color: '#aaa', marginBottom: '20px' }}>AUTHENTICATE</h3>
-                        <input type="password" style={styles.input} value={adminSecret} onChange={e => setAdminSecret(e.target.value)} placeholder="ENTER KEY" />
-                        <button onClick={() => { fetchAdminHistory(adminSecret); fetchMapPool(adminSecret); }} style={{ ...styles.modeBtn, width: '100%', marginTop: '20px' }}>ACCESS</button>
+        const handleAdminLogin = () => {
+            if (!loginUsername.trim() || !loginPassword.trim()) {
+                setAdminLoginError('Please enter username and password');
+                return;
+            }
+            setAdminLoginLoading(true);
+            setAdminLoginError('');
+            fetch(`${SOCKET_URL}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: loginUsername, password: loginPassword })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    setAdminLoginLoading(false);
+                    if (data.error) {
+                        setAdminLoginError(data.error);
+                    } else if (data.token) {
+                        localStorage.setItem('authToken', data.token);
+                        localStorage.setItem('currentUser', JSON.stringify(data.user));
+                        setAuthToken(data.token);
+                        setCurrentUser(data.user);
+                        setIsAdminAuthenticated(true);
+                        setAdminLoginError('');
+
+                        // Check if must change password
+                        if (data.user.must_change_password) {
+                            setShowPasswordChange(true);
+                        }
+
+                        // Fetch admin data
+                        fetchAdminHistory(data.token);
+                        fetchMapPool(data.token);
+
+                        // Load webhook
+                        fetch(`${SOCKET_URL}/api/admin/webhook/get`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.token}` }
+                        }).then(r => r.json()).then(d => { if (d.webhookUrl) setAdminWebhook(d.webhookUrl); }).catch(() => {});
+
+                        // If super_admin, fetch users
+                        if (data.user.role === 'super_admin') {
+                            fetchUsers(data.token);
+                            fetchPermissions(data.token);
+                        }
+                    }
+                })
+                .catch(() => {
+                    setAdminLoginLoading(false);
+                    setAdminLoginError('Connection failed. Is the server running?');
+                });
+        };
+
+        // Password change handler
+        const handleChangePassword = () => {
+            setPasswordError('');
+            setPasswordSuccess('');
+            if (!newPassword || newPassword.length < 4) {
+                setPasswordError('Password must be at least 4 characters');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                setPasswordError('Passwords do not match');
+                return;
+            }
+            const token = localStorage.getItem('authToken');
+            fetch(`${SOCKET_URL}/api/auth/change-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ currentPassword, newPassword })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        setPasswordError(data.error);
+                    } else {
+                        setPasswordSuccess('Password changed successfully!');
+                        if (data.token) {
+                            localStorage.setItem('authToken', data.token);
+                            setAuthToken(data.token);
+                        }
+                        // Update user to remove must_change_password
+                        const updatedUser = { ...currentUser, must_change_password: false };
+                        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                        setCurrentUser(updatedUser);
+                        setTimeout(() => {
+                            setShowPasswordChange(false);
+                            setPasswordSuccess('');
+                            setCurrentPassword('');
+                            setNewPassword('');
+                            setConfirmPassword('');
+                        }, 1500);
+                    }
+                })
+                .catch(() => setPasswordError('Network error'));
+        };
+
+        // User management handlers
+        const handleCreateUser = () => {
+            setUserError('');
+            if (!newUserUsername.trim() || !newUserPassword.trim()) {
+                setUserError('Username and password required');
+                return;
+            }
+            const token = localStorage.getItem('authToken');
+            fetch(`${SOCKET_URL}/api/admin/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ username: newUserUsername, password: newUserPassword, role: newUserRole, permissions: newUserPermissions })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) { setUserError(data.error); }
+                    else { setNewUserUsername(''); setNewUserPassword(''); setNewUserRole('admin'); setNewUserPermissions([]); fetchUsers(token); }
+                })
+                .catch(() => setUserError('Network error'));
+        };
+
+        const handleUpdateUserPermissions = (userId, permissions) => {
+            const token = localStorage.getItem('authToken');
+            fetch(`${SOCKET_URL}/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ permissions })
+            })
+                .then(r => r.json())
+                .then(data => { if (data.success) fetchUsers(token); })
+                .catch(() => {});
+        };
+
+        const handleUpdateUserRole = (userId, role) => {
+            const token = localStorage.getItem('authToken');
+            fetch(`${SOCKET_URL}/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ role })
+            })
+                .then(r => r.json())
+                .then(data => { if (data.success) fetchUsers(token); })
+                .catch(() => {});
+        };
+
+        const handleDeleteUser = (userId) => {
+            if (!window.confirm('Delete this user?')) return;
+            const token = localStorage.getItem('authToken');
+            fetch(`${SOCKET_URL}/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(r => r.json())
+                .then(data => { if (data.success) fetchUsers(token); })
+                .catch(() => {});
+        };
+
+        const handleResetUserPassword = (userId) => {
+            const pwd = window.prompt('Enter new password (min 4 chars):');
+            if (!pwd || pwd.length < 4) { alert('Password must be at least 4 characters'); return; }
+            const token = localStorage.getItem('authToken');
+            fetch(`${SOCKET_URL}/api/admin/users/${userId}/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ newPassword: pwd })
+            })
+                .then(r => r.json())
+                .then(data => { if (data.success) alert('Password reset. User will be prompted to change on next login.'); })
+                .catch(() => {});
+        };
+
+        // --- ADMIN LOGIN PAGE ---
+        if (!isAdminAuthenticated) {
+            return (
+                <div style={{ minHeight: '100vh', background: '#05070a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: "'Rajdhani', sans-serif", position: 'relative', overflow: 'hidden' }}>
+                    {/* Ambient glow */}
+                    <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(0, 212, 255, 0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+                    {/* Top bar */}
+                    <div className="admin-topbar">
+                        <button onClick={goHome} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#888', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', letterSpacing: '1px', transition: 'all 0.2s' }}>
+                            ← HOME
+                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#00ff00', fontSize: '0.8rem', fontWeight: 'bold', opacity: 0.7 }}>
+                                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#00ff00', boxShadow: '0 0 8px #00ff00', animation: 'pulse 2s infinite' }} />
+                                <span>{userCount} online</span>
+                            </div>
+                        </div>
                     </div>
-                ) : (
-                    <div style={{ width: '95%', maxWidth: '1200px', marginTop: '30px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '20px' }}>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div style={{ background: '#0f1219', border: '1px solid #333', borderRadius: '10px', padding: '20px' }}>
-                                <h3 style={{ color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>QUICK CREATE</h3>
-                                <input style={{ ...styles.input, width: '100%', fontSize: '1rem', textAlign: 'left' }} value={adminTeamA} onChange={e => setAdminTeamA(e.target.value)} placeholder="Team A Name" />
-                                <input style={{ ...styles.input, width: '100%', fontSize: '1rem', textAlign: 'left' }} value={adminTeamB} onChange={e => setAdminTeamB(e.target.value)} placeholder="Team B Name" />
-                                <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <input type="checkbox" checked={useTimer} onChange={e => setUseTimer(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-                                        <span>Enable Auto-Ban Timer</span>
+
+                    {/* Login card */}
+                    <div style={{ width: '100%', maxWidth: '420px', padding: '0 20px', animation: 'fadeIn 0.5s ease-out', zIndex: 1 }}>
+                        {/* Logo / Icon */}
+                        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                            <div style={{ width: '64px', height: '64px', margin: '0 auto 24px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.05))', border: '1px solid rgba(0, 212, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'glowPulse 3s infinite' }}>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                            </div>
+                            <h1 style={{ fontSize: '1.8rem', fontWeight: '700', letterSpacing: '6px', background: 'linear-gradient(to right, #00d4ff, #ff0055)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '0 0 8px' }}>CONTROL PANEL</h1>
+                            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.85rem', letterSpacing: '3px', margin: 0 }}>ADMIN ACCESS REQUIRED</p>
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={(e) => { e.preventDefault(); handleAdminLogin(); }}>
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', letterSpacing: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>Username</label>
+                                <input
+                                    type="text"
+                                    className={`admin-login-input ${adminLoginError ? 'error' : ''}`}
+                                    value={loginUsername}
+                                    onChange={e => { setLoginUsername(e.target.value); setAdminLoginError(''); }}
+                                    placeholder="Enter username"
+                                    autoFocus
+                                    autoComplete="username"
+                                />
+                            </div>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', letterSpacing: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>Password</label>
+                                <input
+                                    type="password"
+                                    className={`admin-login-input ${adminLoginError ? 'error' : ''}`}
+                                    value={loginPassword}
+                                    onChange={e => { setLoginPassword(e.target.value); setAdminLoginError(''); }}
+                                    placeholder="••••••••••••"
+                                    autoComplete="current-password"
+                                />
+                            </div>
+
+                            {/* Error message */}
+                            {adminLoginError && (
+                                <div style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(255, 68, 68, 0.08)', border: '1px solid rgba(255, 68, 68, 0.2)', color: '#ff6666', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', animation: 'fadeIn 0.3s ease' }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    {adminLoginError}
+                                </div>
+                            )}
+
+                            <button type="submit" className="admin-login-btn" disabled={adminLoginLoading}>
+                                {adminLoginLoading ? (
+                                    <>
+                                        <div style={{ width: '18px', height: '18px', border: '2px solid rgba(0, 212, 255, 0.3)', borderTop: '2px solid #00d4ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                        AUTHENTICATING
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                                        SIGN IN
+                                    </>
+                                )}
+                            </button>
+                        </form>
+
+                        {/* Footer hint */}
+                        <div style={{ textAlign: 'center', marginTop: '32px', color: 'rgba(255,255,255,0.15)', fontSize: '0.75rem', letterSpacing: '1px' }}>
+                            Default: admin / admin123
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div style={{ position: 'absolute', bottom: '20px', color: 'rgba(255,255,255,0.08)', fontSize: '0.65rem', letterSpacing: '2px', fontWeight: '500' }}>LOTGaming System | kancha@lotgaming.xyz</div>
+                </div>
+            );
+        }
+
+        // --- AUTHENTICATED ADMIN DASHBOARD ---
+        return (
+            <div style={{ minHeight: '100vh', background: '#05070a', fontFamily: "'Rajdhani', sans-serif", color: '#fff' }}>
+                {/* Top navigation bar */}
+                <div className="admin-topbar">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <button onClick={goHome} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#888', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.8rem', letterSpacing: '1px', transition: 'all 0.2s' }}>
+                            ← HOME
+                        </button>
+                        <h1 style={{ fontSize: '1.2rem', fontWeight: '700', letterSpacing: '4px', background: 'linear-gradient(to right, #00d4ff, #ff0055)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>CONTROL PANEL</h1>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#00ff00', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#00ff00', boxShadow: '0 0 8px #00ff00', animation: 'pulse 2s infinite' }} />
+                            <span>{userCount} online</span>
+                        </div>
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+                        {currentUser && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ color: '#aaa', fontSize: '0.8rem', letterSpacing: '1px' }}>
+                                    {currentUser.username}
+                                </span>
+                                <span style={{
+                                    padding: '2px 8px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '1px',
+                                    background: currentUser.role === 'super_admin' ? 'rgba(255, 0, 85, 0.15)' : 'rgba(0, 212, 255, 0.15)',
+                                    color: currentUser.role === 'super_admin' ? '#ff0055' : '#00d4ff',
+                                    border: `1px solid ${currentUser.role === 'super_admin' ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 212, 255, 0.3)'}`
+                                }}>
+                                    {currentUser.role === 'super_admin' ? 'SUPER ADMIN' : 'ADMIN'}
+                                </span>
+                            </div>
+                        )}
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+                        <button
+                            onClick={() => { setShowPasswordChange(true); setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); setPasswordSuccess(''); }}
+                            style={{ background: 'transparent', border: '1px solid rgba(0, 212, 255, 0.2)', color: '#00d4ff', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', letterSpacing: '1px', transition: 'all 0.2s' }}
+                            title="Change Password"
+                        >
+                            🔑
+                        </button>
+                        {currentUser && currentUser.role === 'super_admin' && (
+                            <button
+                                onClick={() => { setShowUserManagement(true); fetchUsers(); fetchPermissions(); }}
+                                style={{ background: 'transparent', border: '1px solid rgba(255, 165, 0, 0.2)', color: '#ffa500', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', letterSpacing: '1px', transition: 'all 0.2s' }}
+                                title="User Management"
+                            >
+                                👥
+                            </button>
+                        )}
+                        <button
+                            onClick={() => { localStorage.removeItem('authToken'); localStorage.removeItem('currentUser'); setIsAdminAuthenticated(false); setCurrentUser(null); setAuthToken(''); }}
+                            style={{ background: 'transparent', border: '1px solid rgba(255, 68, 68, 0.2)', color: '#ff6666', padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.8rem', letterSpacing: '1px', transition: 'all 0.2s' }}
+                        >
+                            LOGOUT
+                        </button>
+                    </div>
+                </div>
+
+                {/* Main content with top padding for fixed navbar */}
+                <div style={{ paddingTop: '76px', paddingBottom: '40px', paddingLeft: isMobile ? '12px' : '24px', paddingRight: isMobile ? '12px' : '24px', maxWidth: '1400px', margin: '0 auto' }}>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '20px' }}>
+
+                        {/* LEFT COLUMN */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', minWidth: isMobile ? 'auto' : '360px' }}>
+
+                            {/* QUICK CREATE */}
+                            <div className="admin-section">
+                                <div className="admin-section-header">
+                                    <div className="admin-section-icon" style={{ background: 'rgba(0, 212, 255, 0.1)' }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                     </div>
+                                    <h3>QUICK CREATE</h3>
+                                </div>
+
+                                <input className="admin-input" value={adminTeamA} onChange={e => setAdminTeamA(e.target.value)} placeholder="Team A Name" />
+                                <input className="admin-input" value={adminTeamB} onChange={e => setAdminTeamB(e.target.value)} placeholder="Team B Name" />
+
+                                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label className="admin-checkbox">
+                                        <input type="checkbox" checked={useTimer} onChange={e => setUseTimer(e.target.checked)} />
+                                        <span>Auto-Ban Timer</span>
+                                    </label>
                                     {useTimer && (
-                                        <div style={{ display: 'flex', gap: '5px', marginTop: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                        <div style={{ display: 'flex', gap: '4px', padding: '4px 0 4px 38px', flexWrap: 'wrap' }}>
                                             {[30, 45, 60, 90, 120].map(seconds => (
                                                 <button
                                                     key={seconds}
                                                     onClick={() => setTimerDuration(seconds)}
                                                     style={{
-                                                        ...styles.modeBtn,
+                                                        padding: '4px 12px',
                                                         background: timerDuration === seconds ? '#00d4ff' : 'transparent',
-                                                        color: timerDuration === seconds ? '#000' : '#aaa',
-                                                        borderColor: timerDuration === seconds ? '#00d4ff' : '#333',
-                                                        padding: '5px 15px',
-                                                        fontSize: '0.9rem'
+                                                        color: timerDuration === seconds ? '#000' : '#666',
+                                                        border: `1px solid ${timerDuration === seconds ? '#00d4ff' : 'rgba(255,255,255,0.08)'}`,
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        fontFamily: "'Rajdhani', sans-serif",
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.8rem',
+                                                        transition: 'all 0.2s'
                                                     }}
                                                 >
                                                     {seconds}s
@@ -1193,67 +1598,91 @@ export default function App() {
                                             ))}
                                         </div>
                                     )}
+                                    <label className="admin-checkbox gold">
+                                        <input type="checkbox" checked={useCoinFlip} onChange={e => setUseCoinFlip(e.target.checked)} />
+                                        <span>Coin Flip</span>
+                                    </label>
                                 </div>
-                                <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#ffd700', fontSize: '0.9rem' }}>
-                                    <input type="checkbox" checked={useCoinFlip} onChange={e => setUseCoinFlip(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-                                    <span>Enable Coin Flip</span>
+
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                                    <button className="create-mode-btn bo1" onClick={() => createMatch('bo1', true)}>Bo1</button>
+                                    <button className="create-mode-btn bo3" onClick={() => createMatch('bo3', true)}>Bo3</button>
+                                    <button className="create-mode-btn bo5" onClick={() => createMatch('bo5', true)}>Bo5</button>
                                 </div>
-                                <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                                    <button style={{ ...styles.modeBtn, flex: 1 }} onClick={() => createMatch('bo1', true)}>Bo1</button>
-                                    <button style={{ ...styles.modeBtn, flex: 1 }} onClick={() => createMatch('bo3', true)}>Bo3</button>
-                                    <button style={{ ...styles.modeBtn, flex: 1 }} onClick={() => createMatch('bo5', true)}>Bo5</button>
-                                </div>
+
                                 {adminLinks && (
-                                    <div style={{ marginTop: '20px', background: '#000', padding: '10px', borderRadius: '5px' }}>
-                                        <div style={{ color: '#00d4ff', fontSize: '0.8rem', marginBottom: '5px' }}>LINKS GENERATED:</div>
-                                        <div onClick={() => handleCopyLogs(adminLinks.admin)} style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#aaa', marginBottom: '5px', wordBreak: 'break-all' }}><b>ADMIN:</b> {adminLinks.admin}</div>
-                                        <div onClick={() => handleCopyLogs(adminLinks.teamA)} style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#aaa', marginBottom: '5px', wordBreak: 'break-all' }}><b>TEAM A:</b> {adminLinks.teamA}</div>
-                                        <div onClick={() => handleCopyLogs(adminLinks.teamB)} style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#aaa', marginBottom: '5px', wordBreak: 'break-all' }}><b>TEAM B:</b> {adminLinks.teamB}</div>
+                                    <div className="generated-links">
+                                        <div style={{ color: '#00d4ff', fontSize: '0.75rem', letterSpacing: '2px', marginBottom: '10px', fontWeight: 700 }}>✓ LINKS GENERATED</div>
+                                        <div className="generated-link-row" onClick={() => handleCopyLogs(adminLinks.admin)}>
+                                            <span className="generated-link-label" style={{ color: '#ffd700' }}>ADMIN</span>
+                                            <span className="generated-link-url">{adminLinks.admin}</span>
+                                        </div>
+                                        <div className="generated-link-row" onClick={() => handleCopyLogs(adminLinks.teamA)}>
+                                            <span className="generated-link-label" style={{ color: '#00d4ff' }}>TEAM A</span>
+                                            <span className="generated-link-url">{adminLinks.teamA}</span>
+                                        </div>
+                                        <div className="generated-link-row" onClick={() => handleCopyLogs(adminLinks.teamB)}>
+                                            <span className="generated-link-label" style={{ color: '#ff0055' }}>TEAM B</span>
+                                            <span className="generated-link-url">{adminLinks.teamB}</span>
+                                        </div>
                                     </div>
                                 )}
                             </div>
+
                             {/* MAP POOL EDITOR */}
-                            <div style={{ background: '#0f1219', border: '1px solid #333', borderRadius: '10px', padding: '20px' }}>
-                                <h3 style={{ color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>MAP POOL EDITOR</h3>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+                            <div className="admin-section">
+                                <div className="admin-section-header">
+                                    <div className="admin-section-icon" style={{ background: 'rgba(255, 165, 0, 0.1)' }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffa500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                                    </div>
+                                    <h3>MAP POOL</h3>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
                                     {mapPool.map((map, i) => (
-                                        <div key={i} style={{ background: '#161b22', padding: '5px 10px', borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #333' }}>
-                                            <span style={{ color: map.customImage ? '#00d4ff' : '#aaa', fontSize: '0.9rem' }}>{map.name}</span>
-                                            <button onClick={() => handleDeleteMap(i)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ff4444', fontWeight: 'bold', fontSize: '0.8rem', display: 'flex', alignItems: 'center' }}><TrashIcon /></button>
+                                        <div key={i} className="map-chip">
+                                            <span className={`map-name ${map.customImage ? 'custom' : ''}`}>{map.name}</span>
+                                            <button onClick={() => handleDeleteMap(i)} className="delete-btn"><TrashIcon /></button>
                                         </div>
                                     ))}
                                 </div>
-                                <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
-                                    <input style={{ ...styles.input, width: '100%', margin: 0, fontSize: '0.9rem' }} value={newMapName} onChange={e => setNewMapName(e.target.value)} placeholder="New Map Name" />
-                                    <input style={{ ...styles.input, width: '100%', margin: 0, fontSize: '0.9rem' }} value={newMapImage} onChange={e => setNewMapImage(e.target.value)} placeholder="Image URL (Optional)" />
-                                    <button onClick={handleAddMap} style={{ ...styles.modeBtn, marginTop: '10px' }}>ADD MAP</button>
-                                </div>
+                                <input className="admin-input" value={newMapName} onChange={e => setNewMapName(e.target.value)} placeholder="New Map Name" />
+                                <input className="admin-input" value={newMapImage} onChange={e => setNewMapImage(e.target.value)} placeholder="Image URL (Optional)" />
+                                <button onClick={handleAddMap} style={{ width: '100%', padding: '10px', background: 'rgba(255, 165, 0, 0.1)', border: '1px solid rgba(255, 165, 0, 0.3)', color: '#ffa500', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: '0.9rem', letterSpacing: '2px', marginTop: '4px', transition: 'all 0.2s' }}>
+                                    ADD MAP
+                                </button>
                             </div>
 
-                            {/* DISCORD WEBHOOK MANAGEMENT */}
-                            <div style={{ background: '#0f1219', border: '1px solid #333', borderRadius: '10px', padding: '20px', marginTop: '20px' }}>
-                                <h3 style={{ color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>DISCORD WEBHOOK</h3>
-                                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '15px' }}>
-                                    Configure a permanent webhook that fires for ALL matches
+                            {/* DISCORD WEBHOOK */}
+                            <div className="admin-section">
+                                <div className="admin-section-header">
+                                    <div className="admin-section-icon" style={{ background: 'rgba(114, 137, 218, 0.1)' }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7289da" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                    </div>
+                                    <h3>DISCORD WEBHOOK</h3>
                                 </div>
+                                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', margin: '0 0 12px', lineHeight: '1.4' }}>
+                                    Configure a permanent webhook that fires for ALL matches
+                                </p>
                                 <input
-                                    style={{ ...styles.input, width: '100%', fontSize: '0.9rem', textAlign: 'left' }}
+                                    className="admin-input"
                                     value={adminWebhook}
                                     onChange={e => setAdminWebhook(e.target.value)}
                                     placeholder="https://discord.com/api/webhooks/..."
+                                    style={{ fontSize: '0.85rem', fontFamily: "'Consolas', monospace", letterSpacing: 0 }}
                                 />
-                                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                                     <button
+                                        className="webhook-btn save"
                                         onClick={() => {
                                             fetch(`${SOCKET_URL}/api/admin/webhook/set`, {
                                                 method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ secret: adminSecret, webhookUrl: adminWebhook })
+                                                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ webhookUrl: adminWebhook })
                                             })
                                                 .then(r => r.json())
                                                 .then(data => {
                                                     if (data.success) {
-                                                        setWebhookTestStatus({ success: true, message: 'Webhook saved successfully!' });
+                                                        setWebhookTestStatus({ success: true, message: 'Webhook saved!' });
                                                         setTimeout(() => setWebhookTestStatus(null), 3000);
                                                     } else {
                                                         setWebhookTestStatus({ success: false, message: data.error || 'Failed to save' });
@@ -1265,18 +1694,18 @@ export default function App() {
                                                     setTimeout(() => setWebhookTestStatus(null), 3000);
                                                 });
                                         }}
-                                        style={{ ...styles.modeBtn, flex: 1, background: '#00d4ff', color: '#000' }}
                                     >
                                         SAVE
                                     </button>
                                     <button
+                                        className="webhook-btn test"
                                         onClick={() => {
                                             if (!adminWebhook.trim()) return;
                                             setWebhookTestStatus({ success: null, message: 'Testing...' });
                                             fetch(`${SOCKET_URL}/api/admin/webhook/test`, {
                                                 method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ secret: adminSecret, webhookUrl: adminWebhook })
+                                                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ webhookUrl: adminWebhook })
                                             })
                                                 .then(r => r.json())
                                                 .then(data => {
@@ -1293,130 +1722,432 @@ export default function App() {
                                                     setTimeout(() => setWebhookTestStatus(null), 3000);
                                                 });
                                         }}
-                                        style={{ ...styles.modeBtn, flex: 1, background: '#ffa500', color: '#000' }}
                                     >
                                         TEST
                                     </button>
                                     <button
+                                        className="webhook-btn clear"
                                         onClick={() => {
                                             setAdminWebhook('');
                                             fetch(`${SOCKET_URL}/api/admin/webhook/set`, {
                                                 method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ secret: adminSecret, webhookUrl: '' })
+                                                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ webhookUrl: '' })
                                             });
                                         }}
-                                        style={{ ...styles.modeBtn, flex: 1, background: '#ff4444', color: '#fff' }}
                                     >
                                         CLEAR
                                     </button>
                                 </div>
                                 {webhookTestStatus && (
                                     <div style={{
-                                        marginTop: '15px',
-                                        padding: '10px',
-                                        borderRadius: '5px',
-                                        background: webhookTestStatus.success === null ? 'rgba(0, 212, 255, 0.1)' : webhookTestStatus.success ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)',
-                                        border: `1px solid ${webhookTestStatus.success === null ? '#00d4ff' : webhookTestStatus.success ? '#00ff00' : '#ff4444'}`,
+                                        marginTop: '12px',
+                                        padding: '10px 14px',
+                                        borderRadius: '8px',
+                                        background: webhookTestStatus.success === null ? 'rgba(0, 212, 255, 0.08)' : webhookTestStatus.success ? 'rgba(0, 255, 0, 0.08)' : 'rgba(255, 0, 0, 0.08)',
+                                        border: `1px solid ${webhookTestStatus.success === null ? 'rgba(0, 212, 255, 0.2)' : webhookTestStatus.success ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'}`,
                                         color: webhookTestStatus.success === null ? '#00d4ff' : webhookTestStatus.success ? '#00ff00' : '#ff4444',
-                                        fontSize: '0.9rem',
-                                        textAlign: 'center'
+                                        fontSize: '0.85rem',
+                                        textAlign: 'center',
+                                        animation: 'fadeIn 0.3s ease'
                                     }}>
                                         {webhookTestStatus.message}
                                     </div>
                                 )}
                             </div>
                         </div>
-                        <div style={{ flex: 2, background: '#0f1219', border: '1px solid #333', borderRadius: '10px', padding: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <h3 style={{ color: '#fff', margin: 0 }}>HISTORY</h3>
-                                    <button onClick={() => fetchAdminHistory(adminSecret)} style={{ background: 'transparent', border: '1px solid #444', borderRadius: '4px', color: '#00d4ff', cursor: 'pointer', padding: '5px', display: 'flex', alignItems: 'center' }} title="Force Refresh"><RefreshIcon /></button>
-                                </div>
-                                <div style={{ fontSize: '0.8rem', color: '#888' }}>ACTIVE: <span style={{ color: '#00ff00' }}>{activeCount}</span> | TOTAL: {historyData.length}</div>
-                            </div>
-                            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                                {historyData.map((match, i) => (
-                                    <div key={i} style={{ background: '#161b22', marginBottom: '10px', padding: '15px', borderRadius: '5px', borderLeft: match.finished ? '4px solid #333' : '4px solid #00ff00' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div style={{ fontWeight: 'bold', color: match.finished ? '#888' : '#fff' }}>{match.teamA} vs {match.teamB} <span style={{ fontSize: '0.7rem', background: '#333', padding: '2px 5px', borderRadius: '3px', marginLeft: '5px' }}>{match.format}</span></div>
-                                            <div style={{ display: 'flex', gap: '10px' }}>
-                                                {!match.finished && (
-                                                    <button onClick={() => handleAdminUndo(match.id)} style={{ background: 'transparent', color: '#ffa500', border: 'none', cursor: 'pointer' }} title="Undo Last Step"><UndoIcon /></button>
-                                                )}
-                                                <button onClick={() => handleAdminReset(match.id)} style={{ background: 'transparent', color: '#00d4ff', border: 'none', cursor: 'pointer' }} title={match.finished ? "Restart Match" : "Reset Match"}><RefreshIcon /></button>
-                                                <button onClick={() => deleteMatch(match.id)} style={{ background: 'transparent', color: '#ff4444', border: 'none', cursor: 'pointer' }}><TrashIcon /></button>
-                                            </div>
+
+                        {/* RIGHT COLUMN - HISTORY */}
+                        <div style={{ flex: 2 }}>
+                            <div className="admin-section" style={{ height: isMobile ? 'auto' : 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div className="admin-section-icon" style={{ background: 'rgba(0, 255, 0, 0.1)' }}>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ff00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="10"/></svg>
                                         </div>
-                                        <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '5px' }}>{new Date(match.date).toLocaleString()}</div>
-                                        {match.keys && (
-                                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                                <button onClick={() => openInNewTab(`/?room=${match.id}&key=${match.keys.admin}`)} style={styles.adminLinkBadge}>OPEN</button>
-                                                <button onClick={() => copyLink(match.id, match.keys.A)} style={styles.copyLinkBadge}>LINK A</button>
-                                                <button onClick={() => copyLink(match.id, match.keys.B)} style={styles.copyLinkBadge}>LINK B</button>
-                                            </div>
-                                        )}
+                                        <h3 style={{ color: '#fff', margin: 0, fontSize: '1.1rem', letterSpacing: '2px' }}>MATCH HISTORY</h3>
+                                        <button
+                                            onClick={() => fetchAdminHistory()}
+                                            className="admin-action-btn reset"
+                                            title="Refresh"
+                                        >
+                                            <RefreshIcon />
+                                        </button>
                                     </div>
-                                ))}
+                                    <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', color: '#666' }}>
+                                        <span>LIVE <span style={{ color: '#00ff00', fontWeight: 'bold' }}>{activeCount}</span></span>
+                                        <span>TOTAL <span style={{ color: '#888', fontWeight: 'bold' }}>{historyData.length}</span></span>
+                                    </div>
+                                </div>
+
+                                <div className="admin-scroll" style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+                                    {historyData.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'rgba(255,255,255,0.15)' }}>
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', opacity: 0.3 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                            <div style={{ fontSize: '0.9rem', letterSpacing: '2px' }}>NO MATCHES YET</div>
+                                            <div style={{ fontSize: '0.8rem', marginTop: '8px', color: 'rgba(255,255,255,0.1)' }}>Create one using Quick Create</div>
+                                        </div>
+                                    ) : (
+                                        historyData.map((match, i) => (
+                                            <div key={i} className={`history-card ${match.finished ? 'finished' : 'active'}`} style={{ animationDelay: `${i * 0.05}s` }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                                        <span style={{ fontWeight: 'bold', color: match.finished ? '#666' : '#fff', fontSize: '0.95rem' }}>
+                                                            {match.teamA} <span style={{ color: '#444', fontWeight: 400 }}>vs</span> {match.teamB}
+                                                        </span>
+                                                        <span className={`format-badge ${match.format.includes('bo1') || match.format === 'bo1' ? 'bo1' : match.format.includes('bo3') || match.format === 'bo3' ? 'bo3' : 'bo5'}`}>
+                                                            {match.format}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                                        {!match.finished && (
+                                                            <button onClick={() => handleAdminUndo(match.id)} className="admin-action-btn undo" title="Undo Last Step"><UndoIcon /></button>
+                                                        )}
+                                                        <button onClick={() => handleAdminReset(match.id)} className="admin-action-btn reset" title={match.finished ? "Restart" : "Reset"}><RefreshIcon /></button>
+                                                        <button onClick={() => deleteMatch(match.id)} className="admin-action-btn delete" title="Delete"><TrashIcon /></button>
+                                                    </div>
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: '#555', marginTop: '6px', letterSpacing: '0.5px' }}>{new Date(match.date).toLocaleString()}</div>
+                                                {match.keys && (
+                                                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                                        <button onClick={() => openInNewTab(`/?room=${match.id}&key=${match.keys.admin}`)} className="match-link-btn open">OPEN</button>
+                                                        <button onClick={() => copyLink(match.id, match.keys.A)} className="match-link-btn copy">LINK A</button>
+                                                        <button onClick={() => copyLink(match.id, match.keys.B)} className="match-link-btn copy">LINK B</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <button onClick={nukeHistory} className="nuke-btn">
+                                    ⚠ CLEAR ALL HISTORY
+                                </button>
                             </div>
-                            <button onClick={nukeHistory} style={{ width: '100%', marginTop: '20px', background: '#330000', border: '1px solid #ff4444', color: '#ff4444', padding: '10px', cursor: 'pointer', borderRadius: '5px' }}>NUKE ALL HISTORY</button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* PASSWORD CHANGE MODAL */}
+                {showPasswordChange && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }}>
+                        <div style={{ background: '#0a0a0f', border: '1px solid rgba(0, 212, 255, 0.15)', borderRadius: '16px', padding: '32px', width: '400px', maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
+                            <h3 style={{ color: '#fff', margin: '0 0 24px 0', fontSize: '1.1rem', letterSpacing: '3px', textAlign: 'center' }}>🔑 CHANGE PASSWORD</h3>
+                            {passwordError && <div style={{ color: '#ff4444', fontSize: '0.85rem', marginBottom: '12px', padding: '8px 12px', background: 'rgba(255, 68, 68, 0.08)', borderRadius: '8px', border: '1px solid rgba(255, 68, 68, 0.15)', textAlign: 'center' }}>{passwordError}</div>}
+                            {passwordSuccess && <div style={{ color: '#00ff00', fontSize: '0.85rem', marginBottom: '12px', padding: '8px 12px', background: 'rgba(0, 255, 0, 0.08)', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)', textAlign: 'center' }}>{passwordSuccess}</div>}
+                            <input
+                                type="password" placeholder="Current Password" value={currentPassword}
+                                onChange={e => setCurrentPassword(e.target.value)}
+                                className="admin-login-input" style={{ width: '100%', boxSizing: 'border-box', marginBottom: '12px' }}
+                            />
+                            <input
+                                type="password" placeholder="New Password" value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                className="admin-login-input" style={{ width: '100%', boxSizing: 'border-box', marginBottom: '12px' }}
+                            />
+                            <input
+                                type="password" placeholder="Confirm New Password" value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)}
+                                className="admin-login-input" style={{ width: '100%', boxSizing: 'border-box', marginBottom: '20px' }}
+                            />
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button onClick={handleChangePassword} style={{ flex: 1, padding: '10px', background: 'linear-gradient(135deg, #00d4ff 0%, #0080ff 100%)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '2px' }}>
+                                    UPDATE
+                                </button>
+                                <button onClick={() => setShowPasswordChange(false)} style={{ flex: 1, padding: '10px', background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', letterSpacing: '2px' }}>
+                                    CANCEL
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
+
+                {/* USER MANAGEMENT MODAL */}
+                {showUserManagement && currentUser && currentUser.role === 'super_admin' && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }}>
+                        <div style={{ background: '#0a0a0f', border: '1px solid rgba(255, 165, 0, 0.15)', borderRadius: '16px', padding: '32px', width: '700px', maxWidth: '95vw', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }} className="admin-scroll">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                <h3 style={{ color: '#fff', margin: 0, fontSize: '1.1rem', letterSpacing: '3px' }}>👥 USER MANAGEMENT</h3>
+                                <button onClick={() => setShowUserManagement(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#888', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                            </div>
+
+                            {userError && <div style={{ color: '#ff4444', fontSize: '0.85rem', marginBottom: '16px', padding: '8px 12px', background: 'rgba(255, 68, 68, 0.08)', borderRadius: '8px', border: '1px solid rgba(255, 68, 68, 0.15)', textAlign: 'center' }}>{userError}</div>}
+
+                            {/* CREATE USER */}
+                            <div style={{ background: 'rgba(255, 165, 0, 0.04)', border: '1px solid rgba(255, 165, 0, 0.1)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+                                <h4 style={{ color: '#ffa500', margin: '0 0 16px 0', fontSize: '0.9rem', letterSpacing: '2px' }}>+ CREATE NEW USER</h4>
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <input
+                                        type="text" placeholder="Username" value={newUserUsername}
+                                        onChange={e => setNewUserUsername(e.target.value)}
+                                        className="admin-login-input" style={{ flex: 1, minWidth: '120px', boxSizing: 'border-box' }}
+                                    />
+                                    <input
+                                        type="password" placeholder="Password" value={newUserPassword}
+                                        onChange={e => setNewUserPassword(e.target.value)}
+                                        className="admin-login-input" style={{ flex: 1, minWidth: '120px', boxSizing: 'border-box' }}
+                                    />
+                                    <select
+                                        value={newUserRole} onChange={e => setNewUserRole(e.target.value)}
+                                        style={{ flex: 0.7, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', outline: 'none', minWidth: '100px' }}
+                                    >
+                                        <option value="admin" style={{ background: '#111' }}>Admin</option>
+                                        <option value="super_admin" style={{ background: '#111' }}>Super Admin</option>
+                                    </select>
+                                    <button onClick={handleCreateUser} style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #ffa500 0%, #ff6600 100%)', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: 'bold', fontSize: '0.85rem', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+                                        CREATE
+                                    </button>
+                                </div>
+                                {/* Permission checkboxes for new user */}
+                                <div style={{ marginTop: '12px' }}>
+                                    <span style={{ color: '#888', fontSize: '0.75rem', letterSpacing: '1px' }}>PERMISSIONS:</span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                                        {allPermissions.map(p => (
+                                            <label key={p} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', background: newUserPermissions.includes(p) ? 'rgba(255, 165, 0, 0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${newUserPermissions.includes(p) ? 'rgba(255, 165, 0, 0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', color: newUserPermissions.includes(p) ? '#ffa500' : '#666', transition: 'all 0.2s', letterSpacing: '0.5px' }}>
+                                                <input
+                                                    type="checkbox" checked={newUserPermissions.includes(p)}
+                                                    onChange={e => {
+                                                        if (e.target.checked) setNewUserPermissions([...newUserPermissions, p]);
+                                                        else setNewUserPermissions(newUserPermissions.filter(x => x !== p));
+                                                    }}
+                                                    style={{ display: 'none' }}
+                                                />
+                                                <div style={{ width: '14px', height: '14px', borderRadius: '3px', border: `1px solid ${newUserPermissions.includes(p) ? '#ffa500' : '#444'}`, background: newUserPermissions.includes(p) ? '#ffa500' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                                                    {newUserPermissions.includes(p) && <span style={{ color: '#000', fontSize: '10px', fontWeight: 'bold' }}>✓</span>}
+                                                </div>
+                                                {p.replace(/_/g, ' ')}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* EXISTING USERS */}
+                            <h4 style={{ color: '#fff', margin: '0 0 12px 0', fontSize: '0.9rem', letterSpacing: '2px' }}>EXISTING USERS</h4>
+                            {userList.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '30px', color: '#555', fontSize: '0.9rem' }}>No users found</div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {userList.map(user => (
+                                        <div key={user.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '16px', transition: 'border-color 0.2s' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.95rem', letterSpacing: '1px' }}>{user.username}</span>
+                                                    <select
+                                                        value={user.role}
+                                                        onChange={e => handleUpdateUserRole(user.id, e.target.value)}
+                                                        disabled={user.id === currentUser.id}
+                                                        style={{ padding: '3px 8px', background: user.role === 'super_admin' ? 'rgba(255, 0, 85, 0.1)' : 'rgba(0, 212, 255, 0.1)', border: `1px solid ${user.role === 'super_admin' ? 'rgba(255, 0, 85, 0.2)' : 'rgba(0, 212, 255, 0.2)'}`, borderRadius: '4px', color: user.role === 'super_admin' ? '#ff0055' : '#00d4ff', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '1px', outline: 'none', cursor: user.id === currentUser.id ? 'not-allowed' : 'pointer', opacity: user.id === currentUser.id ? 0.5 : 1 }}
+                                                    >
+                                                        <option value="admin" style={{ background: '#111' }}>Admin</option>
+                                                        <option value="super_admin" style={{ background: '#111' }}>Super Admin</option>
+                                                    </select>
+                                                    {user.id === currentUser.id && <span style={{ color: '#555', fontSize: '0.7rem' }}>(you)</span>}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                    <button
+                                                        onClick={() => handleResetUserPassword(user.id)}
+                                                        style={{ padding: '4px 10px', background: 'transparent', border: '1px solid rgba(0, 212, 255, 0.2)', color: '#00d4ff', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', letterSpacing: '1px' }}
+                                                        title="Reset password to 'password123'"
+                                                    >
+                                                        RESET PW
+                                                    </button>
+                                                    {user.id !== currentUser.id && (
+                                                        <button
+                                                            onClick={() => handleDeleteUser(user.id)}
+                                                            style={{ padding: '4px 10px', background: 'transparent', border: '1px solid rgba(255, 68, 68, 0.2)', color: '#ff4444', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', letterSpacing: '1px' }}
+                                                        >
+                                                            DELETE
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {/* Permissions */}
+                                            {user.role !== 'super_admin' && (
+                                                <div>
+                                                    <span style={{ color: '#666', fontSize: '0.7rem', letterSpacing: '1px' }}>PERMISSIONS:</span>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                                                        {allPermissions.map(p => {
+                                                            const userPerms = Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]');
+                                                            const has = userPerms.includes(p);
+                                                            return (
+                                                                <label key={p} onClick={() => {
+                                                                    const perms = Array.isArray(user.permissions) ? user.permissions : JSON.parse(user.permissions || '[]');
+                                                                    const newPerms = has ? perms.filter(x => x !== p) : [...perms, p];
+                                                                    handleUpdateUserPermissions(user.id, newPerms);
+                                                                }} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 8px', background: has ? 'rgba(0, 255, 0, 0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${has ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255,255,255,0.05)'}`, borderRadius: '5px', cursor: 'pointer', fontSize: '0.7rem', color: has ? '#00ff00' : '#555', transition: 'all 0.2s', letterSpacing: '0.5px' }}>
+                                                                    <div style={{ width: '12px', height: '12px', borderRadius: '3px', border: `1px solid ${has ? '#00ff00' : '#444'}`, background: has ? '#00ff00' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                                                                        {has && <span style={{ color: '#000', fontSize: '8px', fontWeight: 'bold' }}>✓</span>}
+                                                                    </div>
+                                                                    {p.replace(/_/g, ' ')}
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {user.role === 'super_admin' && (
+                                                <div style={{ color: '#555', fontSize: '0.75rem', fontStyle: 'italic' }}>Super admins have all permissions</div>
+                                            )}
+                                            <div style={{ marginTop: '8px', color: '#444', fontSize: '0.65rem', letterSpacing: '0.5px' }}>
+                                                Created: {new Date(user.created_at).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* MUST CHANGE PASSWORD OVERLAY */}
+                {currentUser && currentUser.must_change_password === 1 && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ background: '#0a0a0f', border: '1px solid rgba(255, 165, 0, 0.2)', borderRadius: '16px', padding: '32px', width: '420px', maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.9)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚠️</div>
+                            <h3 style={{ color: '#ffa500', margin: '0 0 8px 0', fontSize: '1.1rem', letterSpacing: '3px' }}>PASSWORD CHANGE REQUIRED</h3>
+                            <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '20px' }}>You must change your default password before continuing.</p>
+                            {passwordError && <div style={{ color: '#ff4444', fontSize: '0.85rem', marginBottom: '12px', padding: '8px 12px', background: 'rgba(255, 68, 68, 0.08)', borderRadius: '8px', border: '1px solid rgba(255, 68, 68, 0.15)' }}>{passwordError}</div>}
+                            {passwordSuccess && <div style={{ color: '#00ff00', fontSize: '0.85rem', marginBottom: '12px', padding: '8px 12px', background: 'rgba(0, 255, 0, 0.08)', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)' }}>{passwordSuccess}</div>}
+                            <input type="password" placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="admin-login-input" style={{ width: '100%', boxSizing: 'border-box', marginBottom: '12px' }} />
+                            <input type="password" placeholder="Confirm New Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="admin-login-input" style={{ width: '100%', boxSizing: 'border-box', marginBottom: '20px' }} />
+                            <button
+                                onClick={() => {
+                                    if (!newPassword || newPassword.length < 6) { setPasswordError('Password must be at least 6 characters'); return; }
+                                    if (newPassword !== confirmPassword) { setPasswordError('Passwords do not match'); return; }
+                                    setPasswordError('');
+                                    fetch(`${SOCKET_URL}/api/auth/change-password`, {
+                                        method: 'POST',
+                                        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ newPassword })
+                                    })
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            if (data.success) {
+                                                const updatedUser = { ...currentUser, must_change_password: 0 };
+                                                setCurrentUser(updatedUser);
+                                                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                                                setPasswordSuccess('Password changed! Redirecting...');
+                                                setTimeout(() => { setPasswordSuccess(''); setNewPassword(''); setConfirmPassword(''); }, 1500);
+                                            } else {
+                                                setPasswordError(data.error || 'Failed to change password');
+                                            }
+                                        })
+                                        .catch(() => setPasswordError('Network error'));
+                                }}
+                                style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #ffa500 0%, #ff6600 100%)', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: 'bold', fontSize: '1rem', letterSpacing: '2px' }}
+                            >
+                                SET NEW PASSWORD
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {showNotification && <div style={styles.notification}><CheckIcon /> COPIED TO CLIPBOARD</div>}
-                <div style={styles.footer}>LOTGaming Admin System</div>
+
+                {/* Footer */}
+                <div style={{ padding: '20px 32px', color: '#444', fontSize: '0.65rem', letterSpacing: '2px', fontWeight: '500', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.02)' }}>LOTGaming System | kancha@lotgaming.xyz</div>
             </div>
         );
     }
 
+
     // --- RENDER HISTORY ---
     if (view === 'history') {
         return (
-            <div style={styles.container}>
+            <div style={{ minHeight: '100vh', color: '#fff', fontFamily: "'Rajdhani', sans-serif", display: 'flex', flexDirection: 'column' }}>
                 <AnimatedBackground />
-                <h1 style={styles.neonTitle}>VETO ARCHIVE</h1>
-                <button onClick={() => setView('home')} style={styles.backBtn}>← RETURN HOME</button>
 
-                {/* PAGINATION CONTROLS (TOP) */}
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-                    <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        style={{ ...styles.modeBtn, padding: '10px 20px', fontSize: '0.9rem', opacity: currentPage === 1 ? 0.5 : 1 }}
-                    >
-                        PREV
-                    </button>
-                    <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>PAGE {currentPage} / {totalPages}</span>
-                    <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        style={{ ...styles.modeBtn, padding: '10px 20px', fontSize: '0.9rem', opacity: currentPage === totalPages ? 0.5 : 1 }}
-                    >
-                        NEXT
-                    </button>
+                <div style={{ display: 'flex', flex: 1, position: 'relative', zIndex: 1 }}>
+                    {/* LEFT SIDEBAR */}
+                    {!isMobile && (
+                        <div style={{ width: '64px', minHeight: '100vh', background: 'rgba(10, 12, 20, 0.7)', borderRight: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0', position: 'fixed', left: 0, top: 0, zIndex: 50 }}>
+                            <img src={LOGO_URL} alt="Logo" style={{ width: '36px', height: '36px', borderRadius: '10px', marginBottom: '32px', opacity: 0.9 }} />
+                            <div style={{ width: '24px', height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '24px' }} />
+                            <button onClick={() => setView('home')} style={{ width: '40px', height: '40px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#444', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', transition: 'all 0.2s' }} title="Home">🏠</button>
+                            <button style={{ width: '40px', height: '40px', borderRadius: '10px', border: 'none', background: 'rgba(0, 212, 255, 0.1)', color: '#00d4ff', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }} title="History">📋</button>
+                        </div>
+                    )}
+
+                    {/* MAIN CONTENT */}
+                    <div style={{ flex: 1, marginLeft: isMobile ? 0 : '64px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                        {/* Top bar */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: isMobile ? '16px' : '16px 32px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {isMobile && <button onClick={() => setView('home')} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: '#555', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', letterSpacing: '1px', fontWeight: '600' }}>← BACK</button>}
+                                <div>
+                                    <h1 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.3rem', fontWeight: '700', letterSpacing: '4px', color: '#fff' }}>MATCH HISTORY</h1>
+                                    <div style={{ fontSize: '0.6rem', letterSpacing: '3px', color: '#555', fontWeight: '600', marginTop: '1px' }}>{totalPages > 0 ? `${historyData.length} RESULTS • PAGE ${currentPage} OF ${totalPages}` : 'NO RECORDS'}</div>
+                                </div>
+                            </div>
+                            {/* Pagination */}
+                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}
+                                    style={{ width: '32px', height: '32px', borderRadius: '6px', border: 'none', background: currentPage === 1 ? 'transparent' : 'rgba(255,255,255,0.03)', color: currentPage === 1 ? '#222' : '#888', cursor: currentPage === 1 ? 'default' : 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.8rem' }}>←</button>
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum;
+                                    if (totalPages <= 5) pageNum = i + 1;
+                                    else if (currentPage <= 3) pageNum = i + 1;
+                                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                    else pageNum = currentPage - 2 + i;
+                                    return (
+                                        <button key={pageNum} onClick={() => handlePageChange(pageNum)}
+                                            style={{ width: '32px', height: '32px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.78rem', background: pageNum === currentPage ? '#fff' : 'rgba(255,255,255,0.02)', color: pageNum === currentPage ? '#0a0a12' : '#555', transition: 'all 0.2s' }}>
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+                                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}
+                                    style={{ width: '32px', height: '32px', borderRadius: '6px', border: 'none', background: currentPage === totalPages ? 'transparent' : 'rgba(255,255,255,0.03)', color: currentPage === totalPages ? '#222' : '#888', cursor: currentPage === totalPages ? 'default' : 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.8rem' }}>→</button>
+                            </div>
+                        </div>
+
+                        {/* Match cards */}
+                        <div style={{ flex: 1, padding: isMobile ? '16px' : '24px 32px', width: '100%', boxSizing: 'border-box' }}>
+                            {historyData.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '80px 20px', color: '#444' }}>
+                                    <div style={{ fontSize: '2rem', marginBottom: '12px', opacity: 0.5 }}>📭</div>
+                                    <div style={{ fontSize: '0.8rem', letterSpacing: '3px', fontWeight: '600' }}>NO MATCHES FOUND</div>
+                                </div>
+                            ) : historyData.map((match, i) => (
+                                <div key={i} style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '10px', padding: '16px 20px', marginBottom: '10px', animation: `fadeIn 0.3s ease ${i * 0.04}s both`, position: 'relative', overflow: 'hidden' }}>
+                                    {/* Left accent line */}
+                                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '2px', background: match.format?.includes('bo1') ? '#00d4ff' : match.format?.includes('bo3') ? '#a855f7' : '#ff0055' }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <span style={{ color: '#00d4ff', fontWeight: '700', fontSize: '1.1rem' }}>{match.teamA}</span>
+                                            <span style={{ color: '#444', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '2px' }}>VS</span>
+                                            <span style={{ color: '#ff0055', fontWeight: '700', fontSize: '1.1rem' }}>{match.teamB}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <span style={{ fontSize: '0.65rem', color: '#555', letterSpacing: '0.5px' }}>{new Date(match.date).toLocaleString()}</span>
+                                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '700', letterSpacing: '1px', background: match.format?.includes('bo1') ? 'rgba(0,212,255,0.08)' : match.format?.includes('bo3') ? 'rgba(168,85,247,0.08)' : 'rgba(255,0,85,0.08)', color: match.format?.includes('bo1') ? '#00d4ff' : match.format?.includes('bo3') ? '#a855f7' : '#ff0055' }}>
+                                                {match.format?.toUpperCase().replace('_', ' ')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style={{ padding: '10px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                                        {match.logs.map((l, idx) => (
+                                            <div key={idx} style={{ padding: '2px 0', fontSize: '0.75rem', color: '#555', fontFamily: "'Consolas', monospace" }}>{l}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Bottom pagination */}
+                            {totalPages > 1 && (
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '20px 0' }}>
+                                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}
+                                        style={{ padding: '8px 18px', borderRadius: '6px', border: 'none', background: currentPage === 1 ? 'transparent' : 'rgba(255,255,255,0.03)', color: currentPage === 1 ? '#222' : '#666', cursor: currentPage === 1 ? 'default' : 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.78rem', letterSpacing: '1px' }}>PREV</button>
+                                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}
+                                        style={{ padding: '8px 18px', borderRadius: '6px', border: 'none', background: currentPage === totalPages ? 'transparent' : 'rgba(255,255,255,0.03)', color: currentPage === totalPages ? '#222' : '#666', cursor: currentPage === totalPages ? 'default' : 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.78rem', letterSpacing: '1px' }}>NEXT</button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ padding: '20px 32px', color: '#444', fontSize: '0.65rem', letterSpacing: '2px', fontWeight: '500', borderTop: '1px solid rgba(255,255,255,0.02)' }}>LOTGaming System | kancha@lotgaming.xyz</div>
+                    </div>
                 </div>
-
-                <div style={styles.historyList}>{historyData.map((match, i) => (<div key={i} style={styles.historyCard}><div style={styles.historyHeader}><div><span style={{ color: '#00d4ff' }}>{match.teamA}</span> vs <span style={{ color: '#ff0055' }}>{match.teamB}</span></div><span style={styles.formatTag}>{match.format}</span></div><div style={{ fontSize: '0.8rem', color: '#888' }}>{new Date(match.date).toLocaleString()}</div><div style={styles.logBox}>{match.logs.map((l, idx) => <div key={idx} style={styles.logLine}>{l}</div>)}</div></div>))}</div>
-
-                {/* PAGINATION CONTROLS (BOTTOM) */}
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '20px' }}>
-                    <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        style={{ ...styles.modeBtn, padding: '10px 20px', fontSize: '0.9rem', opacity: currentPage === 1 ? 0.5 : 1 }}
-                    >
-                        PREV
-                    </button>
-                    <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        style={{ ...styles.modeBtn, padding: '10px 20px', fontSize: '0.9rem', opacity: currentPage === totalPages ? 0.5 : 1 }}
-                    >
-                        NEXT
-                    </button>
-                </div>
-
-                <div style={styles.footer}>LOTGaming System | Made by &lt;3 kancha@lotgaming.xyz</div>
             </div>
         );
     }
@@ -1424,176 +2155,287 @@ export default function App() {
     // --- RENDER MAIN HOME ---
     if (!params.room) {
         return (
-            <div style={styles.container}>
+            <div style={{ minHeight: '100vh', color: '#fff', fontFamily: "'Rajdhani', sans-serif", display: 'flex', flexDirection: 'column' }}>
                 <AnimatedBackground />
-                <div style={styles.glassPanel}>
-                    {/* UPDATED HEADER LAYOUT */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '20px', position: 'relative' }}>
-                        <img src={LOGO_URL} alt="Logo" style={styles.logo} />
-                        <h1 style={styles.neonTitle}>LOT GAMING</h1>
-                    </div>
 
-                    <h3 style={{ color: '#aaa', letterSpacing: '4px', marginBottom: '30px', fontSize: isMobile ? '0.8rem' : '1rem' }}>COUNTER STRIKE MAP VETO SYSTEM</h3>
+                {/* ========== LEFT SIDEBAR + MAIN CONTENT LAYOUT ========== */}
+                <div style={{ display: 'flex', flex: 1, position: 'relative', zIndex: 1 }}>
 
-                    {/* VETO MODE SWITCHER - NOW RESPONSIVE */}
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '10px', flexWrap: 'wrap' }}>
-                        <button onClick={() => setVetoMode('vrs')} style={vetoMode === 'vrs' ? styles.modeBtnActive : styles.modeBtn}>VRS VETO</button>
-                        <button onClick={() => setVetoMode('faceit')} style={vetoMode === 'faceit' ? styles.modeBtnActive : styles.modeBtn}>FACEIT STYLE</button>
-                        <button onClick={() => setVetoMode('wingman')} style={vetoMode === 'wingman' ? styles.modeBtnActive : styles.modeBtn}>WINGMAN VETO</button>
-                        <button onClick={() => setVetoMode('custom')} style={vetoMode === 'custom' ? styles.modeBtnActive : styles.modeBtn}>CUSTOM VETO</button>
-                    </div>
-
-                    <input style={{ ...styles.input, border: inputError && !teamA.trim() ? '2px solid #ff4444' : '1px solid #333' }} value={teamA} onChange={e => { setTeamA(e.target.value); setInputError(false); }} placeholder="TEAM A NAME (REQUIRED)" />
-
-                    {/* FILE UPLOAD A */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '15px' }}>
-                        <input type="file" ref={fileInputA} style={{ display: 'none' }} accept="image/*" onChange={(e) => handleLogoUpload(e, 'A')} />
-                        <button onClick={() => fileInputA.current.click()} style={{ ...styles.tinyBtn, padding: '5px 15px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <UploadIcon /> {teamALogo ? "CHANGE LOGO A" : "ATTACH LOGO A"}
-                        </button>
-                        {teamALogo && <img src={teamALogo} alt="Preview" style={{ width: '30px', height: '30px', objectFit: 'contain', border: '1px solid #333', borderRadius: '3px' }} />}
-                    </div>
-
-                    <input style={{ ...styles.input, border: inputError && !teamB.trim() ? '2px solid #ff4444' : '1px solid #333' }} value={teamB} onChange={e => { setTeamB(e.target.value); setInputError(false); }} placeholder="TEAM B NAME (REQUIRED)" />
-
-                    {/* FILE UPLOAD B */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '15px' }}>
-                        <input type="file" ref={fileInputB} style={{ display: 'none' }} accept="image/*" onChange={(e) => handleLogoUpload(e, 'B')} />
-                        <button onClick={() => fileInputB.current.click()} style={{ ...styles.tinyBtn, padding: '5px 15px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <UploadIcon /> {teamBLogo ? "CHANGE LOGO B" : "ATTACH LOGO B"}
-                        </button>
-                        {teamBLogo && <img src={teamBLogo} alt="Preview" style={{ width: '30px', height: '30px', objectFit: 'contain', border: '1px solid #333', borderRadius: '3px' }} />}
-                    </div>
-
-                    <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#aaa', fontSize: '0.9rem', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <input type="checkbox" checked={useTimer} onChange={e => setUseTimer(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-                            <span>Enable Auto-Ban Timer</span>
-                        </div>
-                        {useTimer && (
-                            <div style={{ display: 'flex', gap: '5px', marginTop: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                                {[30, 45, 60, 90, 120].map(seconds => (
-                                    <button
-                                        key={seconds}
-                                        onClick={() => setTimerDuration(seconds)}
-                                        style={{
-                                            ...styles.modeBtn,
-                                            background: timerDuration === seconds ? '#00d4ff' : 'transparent',
-                                            color: timerDuration === seconds ? '#000' : '#aaa',
-                                            borderColor: timerDuration === seconds ? '#00d4ff' : '#333',
-                                            padding: '5px 15px',
-                                            fontSize: '0.9rem'
-                                        }}
-                                    >
-                                        {seconds}s
-                                    </button>
-                                ))}
+                    {/* LEFT SIDEBAR - Navigation & Branding */}
+                    {!isMobile && (
+                        <div style={{ width: '64px', minHeight: '100vh', background: 'rgba(10, 12, 20, 0.7)', borderRight: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0', position: 'fixed', left: 0, top: 0, zIndex: 50 }}>
+                            <img src={LOGO_URL} alt="Logo" style={{ width: '36px', height: '36px', borderRadius: '10px', marginBottom: '32px', opacity: 0.9 }} />
+                            <div style={{ width: '24px', height: '1px', background: 'rgba(255,255,255,0.06)', marginBottom: '24px' }} />
+                            <button onClick={() => fetchPublicHistory(1)} style={{ width: '40px', height: '40px', borderRadius: '10px', border: 'none', background: view === 'history' ? 'rgba(0, 212, 255, 0.1)' : 'transparent', color: view === 'history' ? '#00d4ff' : '#444', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', transition: 'all 0.2s' }} title="Match History">📋</button>
+                            <div style={{ marginTop: 'auto', marginBottom: '12px' }}>
+                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#1a1a2e', margin: '6px auto' }} />
+                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#1a1a2e', margin: '6px auto' }} />
                             </div>
-                        )}
-                    </div>
-
-                    {/* NEW: COIN FLIP TOGGLE */}
-                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#ffd700', fontSize: '0.9rem' }}>
-                        <input type="checkbox" checked={useCoinFlip} onChange={e => setUseCoinFlip(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-                        <span>Enable Coin Flip</span>
-                    </div>
-
-                    {/* NEW: DISCORD WEBHOOK INPUT */}
-                    <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                        <label style={{ color: '#00d4ff', fontSize: '0.9rem', marginBottom: '5px', display: 'block' }}>
-                            Discord Webhook (Optional)
-                            <span style={{ color: '#888', fontSize: '0.75rem', marginLeft: '5px' }} title="Get notifications for bans, picks, and match events in Discord">ℹ️</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={tempWebhook}
-                            onChange={e => setTempWebhook(e.target.value)}
-                            placeholder="https://discord.com/api/webhooks/..."
-                            style={{
-                                width: '90%',
-                                maxWidth: '500px',
-                                padding: '8px',
-                                background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid #333',
-                                borderRadius: '5px',
-                                color: '#fff',
-                                fontSize: '0.85rem'
-                            }}
-                        />
-                    </div>
-
-                    {/* MODE SELECTION LOGIC */}
-                    {vetoMode !== 'custom' ? (
-                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
-                            <button style={styles.modeBtn} onClick={() => createMatch('bo1')}>Bo1</button>
-                            <button style={styles.modeBtn} onClick={() => createMatch('bo3')}>Bo3</button>
-                            {vetoMode !== 'wingman' && <button style={styles.modeBtn} onClick={() => createMatch('bo5')}>Bo5</button>}
                         </div>
-                    ) : (
-                        <div style={{ marginTop: '40px', textAlign: 'left', borderTop: '1px solid #333', paddingTop: '30px' }}>
-                            <h4 style={{ color: '#00d4ff', marginBottom: '15px' }}>1. SELECT MAP POOL</h4>
+                    )}
 
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '15px' }}>
-                                {availableMaps.map(m => (
-                                    <div key={m.name} onClick={() => toggleMapSelection(m.name)}
-                                        style={{
-                                            padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem',
-                                            border: customSelectedMaps.includes(m.name) ? '1px solid #00ff00' : '1px solid #333',
-                                            color: customSelectedMaps.includes(m.name) ? '#fff' : '#666',
-                                            background: customSelectedMaps.includes(m.name) ? 'rgba(0,255,0,0.1)' : 'transparent'
-                                        }}>
-                                        {m.name}
+                    {/* MAIN CONTENT AREA */}
+                    <div style={{ flex: 1, marginLeft: isMobile ? 0 : '64px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+
+                        {/* Top bar - compact, no admin link */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: isMobile ? '16px' : '16px 32px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {isMobile && <img src={LOGO_URL} alt="Logo" style={{ width: '28px', height: '28px', borderRadius: '8px' }} />}
+                                <div>
+                                    <h1 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.3rem', fontWeight: '700', letterSpacing: '4px', color: '#fff' }}>MAP VETO</h1>
+                                    <div style={{ fontSize: '0.6rem', letterSpacing: '3px', color: '#555', fontWeight: '600', marginTop: '1px' }}>COUNTER-STRIKE 2</div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                {isMobile && <button onClick={() => fetchPublicHistory(1)} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: '#555', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', letterSpacing: '1px', fontWeight: '600' }}>HISTORY</button>}
+                            </div>
+                        </div>
+
+                        {/* Content wrapper - two-panel layout */}
+                        <div style={{ flex: 1, padding: isMobile ? '20px 16px' : '32px 48px', display: 'flex', gap: isMobile ? '0' : '32px', boxSizing: 'border-box', alignItems: 'flex-start' }}>
+
+                            {/* ===== LEFT PANEL - Match Setup ===== */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+
+                                {/* VETO MODE TABS - horizontal pill tabs */}
+                                <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', padding: '4px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)', width: 'fit-content' }}>
+                                    {[
+                                        { id: 'vrs', label: 'VRS' },
+                                        { id: 'faceit', label: 'FACEIT' },
+                                        { id: 'wingman', label: 'WINGMAN' },
+                                        { id: 'custom', label: 'CUSTOM' }
+                                    ].map(mode => (
+                                        <button key={mode.id} onClick={() => setVetoMode(mode.id)}
+                                            style={{ padding: '8px 20px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.78rem', letterSpacing: '1.5px', transition: 'all 0.2s', background: vetoMode === mode.id ? '#fff' : 'transparent', color: vetoMode === mode.id ? '#0a0a12' : '#555' }}>
+                                            {mode.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* ===== TWO-COLUMN TEAM INPUT ===== */}
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '16px', marginBottom: '28px' }}>
+                                    {/* Team A Card */}
+                                    <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(0, 212, 255, 0.08)', borderRadius: '14px', padding: '20px', position: 'relative', overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #00d4ff, transparent)' }} />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00d4ff', boxShadow: '0 0 8px rgba(0, 212, 255, 0.4)' }} />
+                                            <span style={{ fontSize: '0.7rem', fontWeight: '700', letterSpacing: '3px', color: '#00d4ff' }}>TEAM A</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input style={{ flex: 1, padding: '12px 16px', background: 'rgba(0,0,0,0.3)', border: inputError && !teamA.trim() ? '1px solid #ff4444' : '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', color: '#fff', fontSize: '0.95rem', fontFamily: "'Rajdhani', sans-serif", letterSpacing: '1px', outline: 'none', transition: 'all 0.3s', boxSizing: 'border-box' }}
+                                                value={teamA} onChange={e => { setTeamA(e.target.value); setInputError(false); }}
+                                                placeholder="Team name" />
+                                            <input type="file" ref={fileInputA} style={{ display: 'none' }} accept="image/*" onChange={(e) => handleLogoUpload(e, 'A')} />
+                                            <button onClick={() => fileInputA.current.click()} style={{ width: '42px', height: '42px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', background: teamALogo ? 'rgba(0,212,255,0.08)' : 'rgba(0,0,0,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0 }} title="Upload logo">
+                                                {teamALogo ? <img src={teamALogo} alt="A" style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px' }} /> : <UploadIcon />}
+                                            </button>
+                                        </div>
                                     </div>
-                                ))}
+
+                                    {/* Team B Card */}
+                                    <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255, 0, 85, 0.08)', borderRadius: '14px', padding: '20px', position: 'relative', overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #ff0055, transparent)' }} />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff0055', boxShadow: '0 0 8px rgba(255, 0, 85, 0.4)' }} />
+                                            <span style={{ fontSize: '0.7rem', fontWeight: '700', letterSpacing: '3px', color: '#ff0055' }}>TEAM B</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input style={{ flex: 1, padding: '12px 16px', background: 'rgba(0,0,0,0.3)', border: inputError && !teamB.trim() ? '1px solid #ff4444' : '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', color: '#fff', fontSize: '0.95rem', fontFamily: "'Rajdhani', sans-serif", letterSpacing: '1px', outline: 'none', transition: 'all 0.3s', boxSizing: 'border-box' }}
+                                                value={teamB} onChange={e => { setTeamB(e.target.value); setInputError(false); }}
+                                                placeholder="Team name" />
+                                            <input type="file" ref={fileInputB} style={{ display: 'none' }} accept="image/*" onChange={(e) => handleLogoUpload(e, 'B')} />
+                                            <button onClick={() => fileInputB.current.click()} style={{ width: '42px', height: '42px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', background: teamBLogo ? 'rgba(255,0,85,0.08)' : 'rgba(0,0,0,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0 }} title="Upload logo">
+                                                {teamBLogo ? <img src={teamBLogo} alt="B" style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px' }} /> : <UploadIcon />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* ===== SETTINGS ROW - inline, not stacked ===== */}
+                                <div style={{ display: 'flex', gap: '12px', marginBottom: '28px', flexWrap: 'wrap' }}>
+                                    {/* Timer toggle */}
+                                    <div onClick={() => setUseTimer(!useTimer)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: useTimer ? 'rgba(0, 212, 255, 0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${useTimer ? 'rgba(0, 212, 255, 0.15)' : 'rgba(255,255,255,0.04)'}`, borderRadius: '10px', cursor: 'pointer', transition: 'all 0.2s', userSelect: 'none' }}>
+                                        <span style={{ fontSize: '0.9rem' }}>⏱</span>
+                                        <span style={{ fontSize: '0.78rem', fontWeight: '600', letterSpacing: '1px', color: useTimer ? '#00d4ff' : '#555' }}>TIMER</span>
+                                        <div style={{ width: '32px', height: '18px', borderRadius: '9px', background: useTimer ? '#00d4ff' : 'rgba(255,255,255,0.08)', position: 'relative', transition: 'all 0.3s', marginLeft: '4px' }}>
+                                            <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: useTimer ? '16px' : '2px', transition: 'all 0.3s' }} />
+                                        </div>
+                                    </div>
+
+                                    {/* Timer duration chips */}
+                                    {useTimer && [30, 45, 60, 90, 120].map(s => (
+                                        <button key={s} onClick={() => setTimerDuration(s)}
+                                            style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.78rem', transition: 'all 0.2s', background: timerDuration === s ? '#fff' : 'rgba(255,255,255,0.02)', color: timerDuration === s ? '#0a0a12' : '#444', letterSpacing: '0.5px' }}>
+                                            {s}s
+                                        </button>
+                                    ))}
+
+                                    {/* Coin flip toggle */}
+                                    <div onClick={() => setUseCoinFlip(!useCoinFlip)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', background: useCoinFlip ? 'rgba(255, 215, 0, 0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${useCoinFlip ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255,255,255,0.04)'}`, borderRadius: '10px', cursor: 'pointer', transition: 'all 0.2s', userSelect: 'none' }}>
+                                        <span style={{ fontSize: '0.9rem' }}>🪙</span>
+                                        <span style={{ fontSize: '0.78rem', fontWeight: '600', letterSpacing: '1px', color: useCoinFlip ? '#ffd700' : '#555' }}>COIN FLIP</span>
+                                        <div style={{ width: '32px', height: '18px', borderRadius: '9px', background: useCoinFlip ? '#ffd700' : 'rgba(255,255,255,0.08)', position: 'relative', transition: 'all 0.3s', marginLeft: '4px' }}>
+                                            <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: useCoinFlip ? '16px' : '2px', transition: 'all 0.3s' }} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Discord Webhook - collapsible inline */}
+                                <div style={{ marginBottom: '28px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '0.85rem' }}>📡</span>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: '600', letterSpacing: '2px', color: '#444' }}>DISCORD WEBHOOK</span>
+                                        <span style={{ fontSize: '0.6rem', color: '#555', fontStyle: 'italic' }}>optional</span>
+                                    </div>
+                                    <input type="text" value={tempWebhook} onChange={e => setTempWebhook(e.target.value)} placeholder="https://discord.com/api/webhooks/..."
+                                        style={{ width: '100%', padding: '10px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px', color: '#666', fontSize: '0.8rem', fontFamily: "'Consolas', monospace", boxSizing: 'border-box', outline: 'none', transition: 'all 0.3s' }} />
+                                </div>
+
+                                {/* ===== FORMAT BUTTONS - large action cards ===== */}
+                                {vetoMode !== 'custom' ? (
+                                    <div style={{ display: 'grid', gridTemplateColumns: vetoMode === 'wingman' ? '1fr 1fr' : '1fr 1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+                                        {['bo1', 'bo3', ...(vetoMode !== 'wingman' ? ['bo5'] : [])].map(fmt => (
+                                            <button key={fmt} onClick={() => createMatch(fmt)}
+                                                style={{ padding: '24px 16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", transition: 'all 0.2s', textAlign: 'center', position: 'relative', overflow: 'hidden' }}
+                                                onMouseEnter={e => { e.currentTarget.style.borderColor = fmt === 'bo1' ? 'rgba(0,212,255,0.3)' : fmt === 'bo3' ? 'rgba(168,85,247,0.3)' : 'rgba(255,0,85,0.3)'; e.currentTarget.style.background = fmt === 'bo1' ? 'rgba(0,212,255,0.04)' : fmt === 'bo3' ? 'rgba(168,85,247,0.04)' : 'rgba(255,0,85,0.04)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}>
+                                                <div style={{ fontSize: '1.6rem', fontWeight: '800', letterSpacing: '3px', color: fmt === 'bo1' ? '#00d4ff' : fmt === 'bo3' ? '#a855f7' : '#ff0055', marginBottom: '4px' }}>{fmt.toUpperCase()}</div>
+                                                <div style={{ fontSize: '0.65rem', color: '#444', letterSpacing: '2px', fontWeight: '600' }}>
+                                                    {fmt === 'bo1' ? 'SINGLE MAP' : fmt === 'bo3' ? 'BEST OF THREE' : 'BEST OF FIVE'}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    /* ===== CUSTOM VETO BUILDER ===== */
+                                    <div style={{ marginBottom: '32px' }}>
+                                        {/* Map Pool */}
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                                                <div style={{ width: '20px', height: '20px', borderRadius: '5px', background: 'rgba(0, 212, 255, 0.1)', color: '#00d4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700' }}>1</div>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '2px', color: '#888' }}>MAP POOL</span>
+                                                <span style={{ fontSize: '0.65rem', color: '#555', marginLeft: 'auto' }}>{customSelectedMaps.length} selected</span>
+                                            </div>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                                                {availableMaps.map(m => (
+                                                    <div key={m.name} onClick={() => toggleMapSelection(m.name)}
+                                                        style={{ padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', letterSpacing: '0.5px', transition: 'all 0.2s', border: customSelectedMaps.includes(m.name) ? '1px solid rgba(0, 212, 255, 0.3)' : '1px solid rgba(255,255,255,0.06)', color: customSelectedMaps.includes(m.name) ? '#00d4ff' : '#444', background: customSelectedMaps.includes(m.name) ? 'rgba(0,212,255,0.06)' : 'transparent' }}>
+                                                        {customSelectedMaps.includes(m.name) && '✓ '}{m.name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                <input style={{ flex: 1, padding: '8px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem', fontFamily: "'Rajdhani', sans-serif", outline: 'none', boxSizing: 'border-box' }} placeholder="Add custom map..." value={userCustomMap} onChange={e => setUserCustomMap(e.target.value)} />
+                                                <button onClick={addUserMap} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid rgba(0, 212, 255, 0.2)', background: 'rgba(0, 212, 255, 0.06)', color: '#00d4ff', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.78rem', letterSpacing: '1px' }}>ADD</button>
+                                            </div>
+                                        </div>
+
+                                        {/* Sequence Builder */}
+                                        <div style={{ marginBottom: '20px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                                                <div style={{ width: '20px', height: '20px', borderRadius: '5px', background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700' }}>2</div>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: '700', letterSpacing: '2px', color: '#888' }}>VETO SEQUENCE</span>
+                                                <span style={{ fontSize: '0.65rem', color: '#555', marginLeft: 'auto' }}>{customSequence.length} steps</span>
+                                            </div>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                                                {[
+                                                    { label: 'A BAN', t: 'A', a: 'ban', color: '#ff4444' },
+                                                    { label: 'B BAN', t: 'B', a: 'ban', color: '#ff4444' },
+                                                    { label: 'A PICK', t: 'A', a: 'pick', color: '#00ff88' },
+                                                    { label: 'B PICK', t: 'B', a: 'pick', color: '#00ff88' },
+                                                    { label: 'A SIDE', t: 'A', a: 'side', color: '#a855f7' },
+                                                    { label: 'B SIDE', t: 'B', a: 'side', color: '#a855f7' },
+                                                    { label: 'KNIFE', t: 'System', a: 'knife', color: '#ffa500' }
+                                                ].map((step, idx) => (
+                                                    <button key={idx} onClick={() => addSequenceStep(step.t, step.a)}
+                                                        style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${step.color}22`, background: `${step.color}08`, color: step.color, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.72rem', letterSpacing: '1px', transition: 'all 0.2s' }}>
+                                                        + {step.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px', borderRadius: '8px', minHeight: '44px', display: 'flex', flexWrap: 'wrap', gap: '6px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                {customSequence.length === 0 ? <span style={{ color: '#555', fontSize: '0.78rem', fontStyle: 'italic' }}>Click buttons above to build sequence...</span> : customSequence.map((s, i) => (
+                                                    <span key={i} onClick={() => removeSequenceStep(i)}
+                                                        style={{ background: 'rgba(255,255,255,0.03)', padding: '4px 10px', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#888', fontSize: '0.78rem', transition: 'all 0.2s' }}>
+                                                        <span style={{ color: '#444', fontSize: '0.65rem' }}>{i + 1}.</span> {s.t} {s.a.toUpperCase()} <span style={{ color: '#ff4444', fontWeight: 'bold', marginLeft: '2px', fontSize: '0.85rem' }}>×</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <button onClick={() => createMatch('custom')}
+                                            style={{ width: '100%', padding: '16px', borderRadius: '10px', border: '1px solid rgba(0, 212, 255, 0.2)', background: 'rgba(0, 212, 255, 0.06)', color: '#00d4ff', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontWeight: '700', fontSize: '0.95rem', letterSpacing: '3px', transition: 'all 0.2s' }}>
+                                            GENERATE CUSTOM MATCH →
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Generating spinner */}
+                                {isGenerating && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div style={styles.spinner}></div>
+                                        <span style={{ color: '#555', fontSize: '0.85rem', letterSpacing: '2px', fontWeight: '600' }}>CREATING MATCH...</span>
+                                    </div>
+                                )}
+
+                                {/* Created Links - horizontal cards */}
+                                {createdLinks && !isGenerating && (
+                                    <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px', animation: 'fadeIn 0.4s ease' }}>
+                                        <div style={{ fontSize: '0.7rem', color: '#555', letterSpacing: '3px', fontWeight: '700', marginBottom: '16px' }}>MATCH CREATED</div>
+                                        {[
+                                            { label: 'ADMIN', color: '#888', link: createdLinks.admin },
+                                            { label: 'TEAM A', color: '#00d4ff', link: createdLinks.teamA },
+                                            { label: 'TEAM B', color: '#ff0055', link: createdLinks.teamB }
+                                        ].map((row, idx) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginBottom: idx < 2 ? '8px' : 0, border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                <span style={{ color: row.color, fontWeight: '700', fontSize: '0.72rem', letterSpacing: '1px', minWidth: '55px' }}>{row.label}</span>
+                                                <input readOnly style={{ flex: 1, background: 'transparent', border: 'none', color: '#00d4ff', fontFamily: "'Consolas', monospace", fontSize: '0.8rem', cursor: 'pointer', outline: 'none', textOverflow: 'ellipsis' }} value={row.link} onClick={() => handleCopyLogs(row.link)} />
+                                                <button onClick={() => openInNewTab(row.link)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: row.color, padding: '4px', display: 'flex', alignItems: 'center', transition: '0.2s' }}><ExternalLinkIcon /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '5px', marginBottom: '20px' }}>
-                                <span style={{ fontSize: '0.8rem', color: '#aaa' }}>ADD CUSTOM MAP:</span>
-                                <input
-                                    style={{ ...styles.input, margin: 0, width: '150px', fontSize: '0.9rem', padding: '5px', height: '35px', textAlign: 'left' }}
-                                    placeholder="Map Name"
-                                    value={userCustomMap}
-                                    onChange={e => setUserCustomMap(e.target.value)}
-                                />
-                                <button onClick={addUserMap} style={{ ...styles.tinyBtn, height: '35px', border: '1px solid #00ff00', color: '#00ff00', padding: '0 15px', fontWeight: 'bold' }}>ADD</button>
-                            </div>
+                            {/* ===== RIGHT PANEL - Map Pool Preview & Info ===== */}
+                            {!isMobile && (
+                                <div style={{ flex: '0 1 380px', maxWidth: '380px', minWidth: '280px', position: 'sticky', top: '80px', alignSelf: 'flex-start' }}>
+                                    {/* Map Pool Visual Grid */}
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00d4ff' }} />
+                                            <span style={{ fontSize: '0.65rem', fontWeight: '700', letterSpacing: '3px', color: '#555' }}>ACTIVE MAP POOL</span>
+                                            <span style={{ fontSize: '0.6rem', color: '#555', marginLeft: 'auto' }}>{availableMaps.length} MAPS</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                                            {availableMaps.slice(0, 9).map((m, idx) => {
+                                                const mapUrls = getMapImageUrl(m.name, m.customImage);
+                                                return (
+                                                    <div key={m.name} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.3)', aspectRatio: '4/3', animation: `fadeIn 0.3s ease ${idx * 0.05}s both` }}>
+                                                        <img src={mapUrls.primary} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6, transition: 'opacity 0.3s' }}
+                                                            onError={(e) => { e.target.style.opacity = '0'; }}
+                                                            onMouseEnter={(e) => { e.target.style.opacity = '1'; }}
+                                                            onMouseLeave={(e) => { e.target.style.opacity = '0.6'; }} />
+                                                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '4px 8px', background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', display: 'flex', alignItems: 'flex-end' }}>
+                                                            <span style={{ fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.5px', color: '#ddd', textTransform: 'capitalize' }}>{m.name}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
 
-                            <h4 style={{ color: '#00d4ff' }}>2. DEFINE BAN ORDER</h4>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '10px' }}>
-                                <button style={styles.tinyBtn} onClick={() => addSequenceStep('A', 'ban')}>+ A BAN</button>
-                                <button style={styles.tinyBtn} onClick={() => addSequenceStep('B', 'ban')}>+ B BAN</button>
-                                <button style={styles.tinyBtn} onClick={() => addSequenceStep('A', 'pick')}>+ A PICK</button>
-                                <button style={styles.tinyBtn} onClick={() => addSequenceStep('B', 'pick')}>+ B PICK</button>
-                                <button style={styles.tinyBtn} onClick={() => addSequenceStep('A', 'side')}>+ A SIDE</button>
-                                <button style={styles.tinyBtn} onClick={() => addSequenceStep('B', 'side')}>+ B SIDE</button>
-                                <button style={{ ...styles.tinyBtn, borderColor: '#ffa500', color: '#ffa500' }} onClick={() => addSequenceStep('System', 'knife')}>+ KNIFE</button>
-                            </div>
-                            <div style={{ background: '#000', padding: '10px', borderRadius: '5px', fontSize: '0.8rem', color: '#aaa', minHeight: '50px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                                {customSequence.length === 0 ? "No steps defined." : customSequence.map((s, i) => (
-                                    <span key={i} onClick={() => removeSequenceStep(i)} style={{ background: '#222', padding: '2px 6px', borderRadius: '3px', border: '1px solid #444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        {i + 1}. {s.t} {s.a.toUpperCase()} <span style={{ color: '#ff4444', fontWeight: 'bold' }}>x</span>
-                                    </span>
-                                ))}
-                            </div>
-
-                            <button style={{ ...styles.modeBtn, width: '100%', marginTop: '20px', borderColor: '#00ff00', color: '#00ff00' }} onClick={() => createMatch('custom')}>GENERATE CUSTOM MATCH</button>
+                                </div>
+                            )}
                         </div>
-                    )}
 
-                    {isGenerating && <div style={styles.generatingBox}><div style={styles.spinner}></div></div>}
-
-                    {createdLinks && !isGenerating && (
-                        <div style={styles.linksBox}>
-                            <div style={styles.linkRow}><span style={{ color: '#aaa', fontWeight: 'bold', minWidth: '70px' }}>ADMIN:</span> <input readOnly style={styles.linkInput} value={createdLinks.admin} onClick={() => handleCopyLogs(createdLinks.admin)} /><button onClick={() => openInNewTab(createdLinks.admin)} style={styles.iconBtn}><ExternalLinkIcon /></button></div>
-                            <div style={styles.linkRow}><span style={{ color: '#00d4ff', fontWeight: 'bold', minWidth: '70px' }}>TEAM A:</span> <input readOnly style={styles.linkInput} value={createdLinks.teamA} onClick={() => handleCopyLogs(createdLinks.teamA)} /><button onClick={() => openInNewTab(createdLinks.teamA)} style={{ ...styles.iconBtn, color: '#00d4ff' }}><ExternalLinkIcon /></button></div>
-                            <div style={styles.linkRow}><span style={{ color: '#ff0055', fontWeight: 'bold', minWidth: '70px' }}>TEAM B:</span> <input readOnly style={styles.linkInput} value={createdLinks.teamB} onClick={() => handleCopyLogs(createdLinks.teamB)} /><button onClick={() => openInNewTab(createdLinks.teamB)} style={{ ...styles.iconBtn, color: '#ff0055' }}><ExternalLinkIcon /></button></div>
-                        </div>
-                    )}
-
-                    <button onClick={() => fetchPublicHistory(1)} style={styles.historyBtn}>VIEW PAST VETOS</button>
+                        {/* Footer */}
+                        <div style={{ padding: '20px 32px', color: '#444', fontSize: '0.65rem', letterSpacing: '2px', fontWeight: '500', borderTop: '1px solid rgba(255,255,255,0.02)' }}>LOTGaming System | kancha@lotgaming.xyz</div>
+                    </div>
                 </div>
+
+                {/* Notification toast */}
                 <div style={{ ...styles.notification, opacity: showNotification ? 1 : 0, transform: showNotification ? 'translateY(0)' : 'translateY(20px)' }}><CheckIcon /> COPIED TO CLIPBOARD</div>
-                <div style={styles.footer}>LOTGaming System | Made by &lt;3 kancha@lotgaming.xyz</div>
             </div>
         );
     }
@@ -1634,89 +2476,132 @@ export default function App() {
     return (
         <div style={styles.container}>
             <AnimatedBackground />
-            <button onClick={goHome} style={styles.homeBtn} title="Exit to Main Menu"><HomeIcon /> EXIT TO MENU</button>
-            <button
-                onClick={() => {
-                    const newState = !soundEnabled;
-                    setSoundEnabled(newState);
-                    localStorage.setItem('soundEnabled', newState);
-                }}
-                style={{
-                    position: 'absolute',
-                    top: isMobile ? '10px' : '20px',
-                    right: isMobile ? '10px' : '20px',
-                    background: soundEnabled ? 'rgba(0, 212, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                    border: `1px solid ${soundEnabled ? '#00d4ff' : '#666'}`,
-                    color: soundEnabled ? '#00d4ff' : '#888',
-                    padding: '8px 15px',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    zIndex: 100,
-                    fontFamily: "'Rajdhani', sans-serif"
-                }}
-                title={soundEnabled ? "Disable Sounds" : "Enable Sounds"}
-            >
-                {soundEnabled ? '🔊' : '🔇'} {soundEnabled ? 'SOUND ON' : 'SOUND OFF'}
-            </button>
-            {showRules && <RulesModal format={gameState.format} isMobile={isMobile} onClose={() => setShowRules(false)} />}
-            <div style={{ ...styles.notification, opacity: showNotification ? 1 : 0, transform: showNotification ? 'translateY(0)' : 'translateY(20px)' }}><CheckIcon /> COPIED TO CLIPBOARD</div>
 
-            {/* UPDATED SCOREBOARD WITH LOGOS */}
-            <div style={styles.scoreboard}>
-                <div style={{ ...styles.teamName, color: '#00d4ff', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    {gameState.teamALogo && <img src={gameState.teamALogo} alt="" style={styles.teamLogo} />}
-                    {gameState.teamA}
+            {/* Veto Top Bar */}
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', height: '48px', background: 'rgba(6, 8, 14, 0.92)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <button onClick={goHome} style={{ background: 'transparent', border: 'none', color: '#555', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', letterSpacing: '1px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }} title="Exit to Main Menu"
+                    onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                    onMouseLeave={e => e.currentTarget.style.color = '#555'}>
+                    <HomeIcon /> EXIT
+                </button>
+
+                {/* Center: Format + Role */}
+                <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ padding: '3px 10px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '700', letterSpacing: '2px', background: 'rgba(255,255,255,0.04)', color: '#666', fontFamily: "'Rajdhani', sans-serif" }}>
+                        {gameState.format?.toUpperCase().replace('_', ' ')}
+                    </span>
+                    <span style={{ color: '#444', fontSize: '0.6rem' }}>•</span>
+                    <span style={{ padding: '3px 10px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '700', letterSpacing: '1px', color: roleData.color, fontFamily: "'Rajdhani', sans-serif" }}>
+                        {roleData.text}
+                    </span>
                 </div>
-                <div style={styles.vsBadge}>VS</div>
-                <div style={{ ...styles.teamName, color: '#ff0055', display: 'flex', alignItems: 'center', gap: '15px', flexDirection: 'row-reverse' }}>
-                    {gameState.teamBLogo && <img src={gameState.teamBLogo} alt="" style={styles.teamLogo} />}
-                    {gameState.teamB}
+
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <button onClick={() => setShowRules(true)} style={{ background: 'transparent', border: 'none', color: '#444', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }} title="Show Rules"
+                        onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#444'}>📋</button>
+                    <button
+                        onClick={() => { const newState = !soundEnabled; setSoundEnabled(newState); localStorage.setItem('soundEnabled', newState); }}
+                        style={{ background: 'transparent', border: 'none', color: soundEnabled ? '#00d4ff' : '#444', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }}
+                        title={soundEnabled ? "Disable Sounds" : "Enable Sounds"}
+                    >
+                        {soundEnabled ? '🔊' : '🔇'}
+                    </button>
                 </div>
             </div>
 
-            <div style={{ ...styles.statusBar, borderColor: isMyTurn ? actionColor : '#333', boxShadow: isMyTurn ? `0 0 10px ${actionColor}22` : 'none' }}>
-                <h2>
+            {showRules && <RulesModal format={gameState.format} isMobile={isMobile} onClose={() => setShowRules(false)} />}
+            <div style={{ ...styles.notification, opacity: showNotification ? 1 : 0, transform: showNotification ? 'translateY(0)' : 'translateY(20px)' }}><CheckIcon /> COPIED TO CLIPBOARD</div>
+
+            {/* SCOREBOARD */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '16px' : '40px', marginTop: '68px', justifyContent: 'center', flexWrap: 'wrap', padding: '0 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '14px' }}>
+                    {gameState.teamALogo && <img src={gameState.teamALogo} alt="" style={{ height: isMobile ? '36px' : '44px', width: isMobile ? '36px' : '44px', objectFit: 'contain', borderRadius: '8px', background: 'rgba(0, 212, 255, 0.05)', border: '1px solid rgba(0, 212, 255, 0.12)', padding: '4px' }} />}
+                    <span style={{ fontSize: isMobile ? '1.4rem' : '2rem', fontWeight: '800', textTransform: 'uppercase', color: '#00d4ff', letterSpacing: '2px', fontFamily: "'Rajdhani', sans-serif" }}>{gameState.teamA}</span>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#444', fontWeight: '900', letterSpacing: '4px', fontFamily: "'Rajdhani', sans-serif" }}>VS</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '14px', flexDirection: 'row-reverse' }}>
+                    {gameState.teamBLogo && <img src={gameState.teamBLogo} alt="" style={{ height: isMobile ? '36px' : '44px', width: isMobile ? '36px' : '44px', objectFit: 'contain', borderRadius: '8px', background: 'rgba(255, 0, 85, 0.05)', border: '1px solid rgba(255, 0, 85, 0.12)', padding: '4px' }} />}
+                    <span style={{ fontSize: isMobile ? '1.4rem' : '2rem', fontWeight: '800', textTransform: 'uppercase', color: '#ff0055', letterSpacing: '2px', fontFamily: "'Rajdhani', sans-serif" }}>{gameState.teamB}</span>
+                </div>
+            </div>
+
+            {/* Status Bar */}
+            <div style={{
+                width: isMobile ? '92%' : '80%', maxWidth: '700px', textAlign: 'center', padding: '14px 20px',
+                background: isMyTurn ? `rgba(${currentStep?.a === 'ban' ? '255,68,68' : '0,255,0'}, 0.04)` : 'rgba(10, 12, 20, 0.7)',
+                borderRadius: '10px', margin: '20px 0 16px', transition: '0.3s ease',
+                border: `1px solid ${isMyTurn ? (currentStep?.a === 'ban' ? 'rgba(255,68,68,0.15)' : 'rgba(0,255,0,0.15)') : 'rgba(255,255,255,0.04)'}`,
+                backdropFilter: 'blur(8px)'
+            }}>
+                <h2 style={{ margin: 0, fontSize: isMobile ? '0.75rem' : '0.85rem', fontWeight: '700', letterSpacing: '3px', textTransform: 'uppercase', color: isMyTurn ? '#fff' : '#666', fontFamily: "'Rajdhani', sans-serif" }}>
                     {getInstruction()}
-                    {/* TIMER DISPLAY */}
                     {!gameState.finished && <Countdown endsAt={gameState.timerEndsAt} soundEnabled={soundEnabled} />}
                 </h2>
             </div>
 
-            {/* READY BUTTON OVERLAY OR INSERTION */}
+            {/* READY BUTTON */}
             {showReadyButton && (
-                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                    <button onClick={handleReady} style={{ ...styles.modeBtn, fontSize: '1.5rem', background: '#00d4ff', color: '#000', border: 'none', padding: '15px 40px', boxShadow: '0 0 20px rgba(0, 212, 255, 0.5)' }}>
-                        CLICK TO READY UP
+                <div style={{ textAlign: 'center', marginBottom: '16px', animation: 'fadeIn 0.5s ease' }}>
+                    <button onClick={handleReady} style={{
+                        background: 'rgba(0, 212, 255, 0.08)', color: '#00d4ff', border: '1px solid rgba(0, 212, 255, 0.2)',
+                        padding: '14px 44px', borderRadius: '10px', fontSize: '1rem', fontWeight: '800', letterSpacing: '3px',
+                        cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", transition: 'all 0.3s', animation: 'glowPulse 2s ease-in-out infinite'
+                    }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0, 212, 255, 0.15)'; e.currentTarget.style.borderColor = 'rgba(0, 212, 255, 0.4)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0, 212, 255, 0.08)'; e.currentTarget.style.borderColor = 'rgba(0, 212, 255, 0.2)'; }}>
+                        ✋ READY UP
                     </button>
                 </div>
             )}
 
+            {/* Side Selection */}
             {isSideStep && (
-                <div style={styles.sideSelectionContainer}>
-                    <h2 style={{ marginBottom: '30px', textShadow: '0 0 10px white', fontSize: isMobile ? '1.2rem' : '2rem' }}>SELECT SIDE FOR {sidePickMapName?.toUpperCase()}</h2>
+                <div style={{ textAlign: 'center', margin: '32px 0', width: '100%' }}>
+                    <div style={{ marginBottom: '20px', fontSize: isMobile ? '0.75rem' : '0.85rem', fontWeight: '700', letterSpacing: '4px', color: '#555', fontFamily: "'Rajdhani', sans-serif" }}>
+                        SELECT SIDE FOR <span style={{ color: '#00d4ff' }}>{sidePickMapName?.toUpperCase()}</span>
+                    </div>
                     {isMyTurn ? (
-                        <div style={{ display: 'flex', gap: isMobile ? '10px' : '40px', justifyContent: 'center', alignItems: 'stretch' }}>
-                            <div onMouseEnter={() => setHoveredItem('CT')} onMouseLeave={() => setHoveredItem(null)} style={{ ...styles.sideCard, border: '2px solid #4facfe', boxShadow: hoveredItem === 'CT' ? '0 0 40px rgba(79, 172, 254, 0.6)' : 'none', transform: hoveredItem === 'CT' ? 'scale(1.05)' : 'scale(1)' }} onClick={() => handleAction('CT')}>
-                                <img src="/CT.png" alt="CT" style={styles.sideImg} /><div style={styles.sideLabelCT}>CT</div>
+                        <div style={{ display: 'flex', gap: isMobile ? '12px' : '24px', justifyContent: 'center', alignItems: 'stretch' }}>
+                            <div onMouseEnter={() => setHoveredItem('CT')} onMouseLeave={() => setHoveredItem(null)}
+                                style={{
+                                    width: isMobile ? '45%' : '240px', cursor: 'pointer', transition: 'all 0.3s ease', borderRadius: '14px', overflow: 'hidden',
+                                    background: 'rgba(10, 12, 20, 0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '16px',
+                                    border: hoveredItem === 'CT' ? '1px solid rgba(79, 172, 254, 0.4)' : '1px solid rgba(255,255,255,0.04)',
+                                    boxShadow: hoveredItem === 'CT' ? '0 8px 32px rgba(79, 172, 254, 0.1)' : '0 4px 16px rgba(0,0,0,0.3)',
+                                    transform: hoveredItem === 'CT' ? 'scale(1.02) translateY(-2px)' : 'scale(1)'
+                                }}
+                                onClick={() => handleAction('CT')}>
+                                <img src="/CT.png" alt="CT" style={{ width: '100%', height: isMobile ? '100px' : '180px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(79,172,254,0.15))', padding: '16px' }} />
+                                <div style={{ fontSize: isMobile ? '0.85rem' : '1rem', color: '#4facfe', fontWeight: '800', letterSpacing: '3px', fontFamily: "'Rajdhani', sans-serif" }}>CT SIDE</div>
                             </div>
-                            <div onMouseEnter={() => setHoveredItem('T')} onMouseLeave={() => setHoveredItem(null)} style={{ ...styles.sideCard, border: '2px solid #ff9a9e', boxShadow: hoveredItem === 'T' ? '0 0 40px rgba(255, 154, 158, 0.6)' : 'none', transform: hoveredItem === 'T' ? 'scale(1.05)' : 'scale(1)' }} onClick={() => handleAction('T')}>
-                                <img src="/T.png" alt="T" style={styles.sideImg} /><div style={styles.sideLabelT}>T</div>
+                            <div onMouseEnter={() => setHoveredItem('T')} onMouseLeave={() => setHoveredItem(null)}
+                                style={{
+                                    width: isMobile ? '45%' : '240px', cursor: 'pointer', transition: 'all 0.3s ease', borderRadius: '14px', overflow: 'hidden',
+                                    background: 'rgba(10, 12, 20, 0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '16px',
+                                    border: hoveredItem === 'T' ? '1px solid rgba(255, 154, 158, 0.4)' : '1px solid rgba(255,255,255,0.04)',
+                                    boxShadow: hoveredItem === 'T' ? '0 8px 32px rgba(255, 154, 158, 0.1)' : '0 4px 16px rgba(0,0,0,0.3)',
+                                    transform: hoveredItem === 'T' ? 'scale(1.02) translateY(-2px)' : 'scale(1)'
+                                }}
+                                onClick={() => handleAction('T')}>
+                                <img src="/T.png" alt="T" style={{ width: '100%', height: isMobile ? '100px' : '180px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255,154,158,0.15))', padding: '16px' }} />
+                                <div style={{ fontSize: isMobile ? '0.85rem' : '1rem', color: '#ff9a9e', fontWeight: '800', letterSpacing: '3px', fontFamily: "'Rajdhani', sans-serif" }}>T SIDE</div>
                             </div>
                         </div>
-                    ) : <h3 style={{ color: '#888' }}>WAITING FOR OPPONENT...</h3>}
+                    ) : (
+                        <div style={{ color: '#555', fontSize: '0.8rem', letterSpacing: '4px', fontWeight: '700', fontFamily: "'Rajdhani', sans-serif" }}>
+                            ⏳ WAITING FOR OPPONENT...
+                        </div>
+                    )}
                 </div>
             )}
 
+            {/* Map Grid */}
             {!isSideStep && (
                 <div style={styles.grid}>
                     {gameState.maps.map(map => {
                         const areTeamsReady = !gameState.useTimer || (gameState.ready.A && gameState.ready.B);
                         const isInteractive = areTeamsReady && isMyTurn && isActionStep && map.status === 'available';
-
                         const isHovered = hoveredItem === map.name;
                         const logData = getMapLogData(map.name);
                         const playIndex = gameState.playedMaps ? gameState.playedMaps.indexOf(map.name) : -1;
@@ -1741,23 +2626,29 @@ export default function App() {
                 </div>
             )}
 
-            {/* --- INSERTED ROLE BADGE HERE --- */}
-            <div style={{
-                marginTop: '20px', marginBottom: '10px',
-                padding: '10px 30px', borderRadius: '50px',
-                background: 'rgba(0,0,0,0.5)', border: `2px solid ${roleData.color}`,
-                color: roleData.color, fontSize: '1.2rem', fontWeight: 'bold',
-                textTransform: 'uppercase', letterSpacing: '2px',
-                boxShadow: `0 0 15px ${roleData.color}44`
-            }}>
-                {roleData.text}
+            {/* Veto Logs */}
+            <div style={styles.logContainer}>
+                <div style={styles.logHeader}>
+                    <span style={{ letterSpacing: '3px', fontSize: '0.7rem', color: '#444', fontWeight: '700' }}>VETO LOG</span>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {gameState.finished && (
+                            <button onClick={() => handleCopyLogs(gameState.logs.join('\n'))} style={styles.copyBtn}>
+                                <CopyIcon /> <span style={{ marginLeft: '4px' }}>COPY</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+                <div style={styles.logScroll}>
+                    {gameState.logs.map((log, i) => (
+                        <div key={i} style={{ ...styles.logRow, animation: `fadeIn 0.2s ease ${i * 0.03}s both` }}>
+                            <span style={{ color: '#444', marginRight: '12px', fontFamily: "'Consolas', monospace", fontSize: '0.7rem', minWidth: '22px' }}>{(i + 1).toString().padStart(2, '0')}</span>
+                            <LogLineRenderer log={log} teamA={gameState.teamA} teamB={gameState.teamB} />
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div style={styles.logContainer}>
-                <div style={styles.logHeader}><span>VETO LOGS</span>{gameState.finished && <button onClick={() => handleCopyLogs(gameState.logs.join('\n'))} style={styles.copyBtn}><span style={{ marginRight: '5px' }}>COPY</span> <CopyIcon /></button>}</div>
-                <div style={styles.logScroll}>{gameState.logs.map((log, i) => <div key={i} style={styles.logRow}><span style={{ color: '#444', marginRight: '15px', fontFamily: 'monospace' }}>{(i + 1).toString().padStart(2, '0')}.</span><LogLineRenderer log={log} teamA={gameState.teamA} teamB={gameState.teamB} /></div>)}</div>
-            </div>
-            <div style={styles.footer}>LOTGaming System | Made by &lt;3 kancha@lotgaming.xyz</div>
+            <div style={{ marginTop: 'auto', padding: '20px 32px', color: '#444', fontSize: '0.65rem', letterSpacing: '2px', textAlign: 'center', fontWeight: '500', borderTop: '1px solid rgba(255,255,255,0.02)' }}>LOTGaming System | kancha@lotgaming.xyz</div>
         </div>
     );
 }
@@ -1765,75 +2656,74 @@ export default function App() {
 // --- DYNAMIC STYLES ---
 const getStyles = (isMobile) => ({
     container: { minHeight: '100vh', color: '#fff', fontFamily: "'Rajdhani', sans-serif", display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '50px', overflowX: 'hidden' },
-    // UPDATED LOGO STYLE
-    logo: { width: isMobile ? '50px' : '80px', filter: 'drop-shadow(0 0 10px rgba(0, 212, 255, 0.4))' },
+    logo: { width: isMobile ? '60px' : '90px', filter: 'drop-shadow(0 0 20px rgba(0, 212, 255, 0.5))', borderRadius: '12px' },
 
     generatingBox: { marginTop: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' },
-    spinner: { width: '40px', height: '40px', border: '4px solid rgba(0, 212, 255, 0.3)', borderTop: '4px solid #00d4ff', borderRadius: '50%', animation: 'spin 1s linear infinite' },
-    homeBtn: { position: 'absolute', top: isMobile ? '10px' : '20px', left: isMobile ? '10px' : '20px', background: 'rgba(0,0,0,0.5)', border: '1px solid #444', color: '#fff', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', transition: '0.2s', zIndex: 100 },
-    neonTitle: { fontSize: isMobile ? '2rem' : '3.5rem', margin: 0, fontWeight: '700', letterSpacing: isMobile ? '2px' : '8px', background: 'linear-gradient(to right, #00d4ff, #ff0055)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 0 30px rgba(0, 212, 255, 0.3)', textAlign: 'center' },
-    glassPanel: { background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '20px', padding: isMobile ? '20px' : '60px', textAlign: 'center', marginTop: '10vh', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', width: isMobile ? '90%' : 'auto' },
-    notification: { position: 'fixed', bottom: '30px', right: isMobile ? '5%' : '30px', width: isMobile ? '90%' : 'auto', zIndex: 1000, background: 'rgba(10, 15, 25, 0.95)', borderLeft: '5px solid #00d4ff', padding: '15px 25px', borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 0 20px rgba(0, 212, 255, 0.2)', transition: 'all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)', backdropFilter: 'blur(10px)' },
-    input: { display: 'block', width: isMobile ? '100%' : '300px', padding: '15px', margin: '15px auto', background: 'rgba(0,0,0,0.4)', borderRadius: '5px', color: '#fff', fontSize: '1.2rem', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", letterSpacing: '2px', boxSizing: 'border-box' },
-    modeBtn: { padding: '15px 30px', background: 'rgba(0, 212, 255, 0.1)', border: '2px solid #00d4ff', color: '#00d4ff', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: '0.2s', fontFamily: "'Rajdhani', sans-serif", boxShadow: '0 0 15px rgba(0, 212, 255, 0.2)', flex: 1 },
-    modeBtnActive: { padding: '15px 30px', background: '#00d4ff', border: '2px solid #00d4ff', color: '#000', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: '0.2s', fontFamily: "'Rajdhani', sans-serif", boxShadow: '0 0 15px rgba(0, 212, 255, 0.5)', flex: 1 },
-    tinyBtn: { padding: '5px 10px', background: 'transparent', border: '1px solid #00d4ff', color: '#00d4ff', borderRadius: '3px', cursor: 'pointer', fontSize: '0.7rem' },
+    spinner: { width: '44px', height: '44px', border: '3px solid rgba(0, 212, 255, 0.15)', borderTop: '3px solid #00d4ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+    homeBtn: { position: 'absolute', top: isMobile ? '10px' : '20px', left: isMobile ? '10px' : '20px', background: 'rgba(10, 12, 20, 0.8)', border: '1px solid rgba(255,255,255,0.08)', color: '#aaa', padding: '10px 18px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', transition: 'all 0.3s', zIndex: 100, backdropFilter: 'blur(8px)', fontFamily: "'Rajdhani', sans-serif", letterSpacing: '1px', fontWeight: '600' },
+    neonTitle: { fontSize: isMobile ? '2rem' : '3.5rem', margin: 0, fontWeight: '700', letterSpacing: isMobile ? '3px' : '10px', background: 'linear-gradient(135deg, #00d4ff 0%, #a855f7 50%, #ff0055 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center', lineHeight: 1.1 },
+    glassPanel: { background: 'rgba(10, 12, 20, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '24px', padding: isMobile ? '24px 16px' : '48px 56px', textAlign: 'center', marginTop: '6vh', boxShadow: '0 24px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)', width: isMobile ? '92%' : '560px', position: 'relative', overflow: 'hidden' },
+    notification: { position: 'fixed', bottom: '30px', right: isMobile ? '5%' : '30px', width: isMobile ? '90%' : 'auto', zIndex: 1000, background: 'rgba(10, 15, 25, 0.95)', borderLeft: '4px solid #00d4ff', padding: '14px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 8px 32px rgba(0, 212, 255, 0.15)', transition: 'all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55)', backdropFilter: 'blur(12px)', fontWeight: '600', letterSpacing: '1px' },
+    input: { display: 'block', width: '100%', padding: '14px 18px', margin: '0 auto 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', color: '#fff', fontSize: '1rem', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", letterSpacing: '2px', boxSizing: 'border-box', outline: 'none', transition: 'all 0.3s' },
+    modeBtn: { padding: isMobile ? '12px 16px' : '14px 24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0, 212, 255, 0.2)', color: '#00d4ff', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: isMobile ? '0.85rem' : '0.95rem', transition: 'all 0.3s', fontFamily: "'Rajdhani', sans-serif", flex: 1, letterSpacing: '1px', backdropFilter: 'blur(4px)' },
+    modeBtnActive: { padding: isMobile ? '12px 16px' : '14px 24px', background: 'linear-gradient(135deg, #00d4ff 0%, #0080ff 100%)', border: '1px solid #00d4ff', color: '#000', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: isMobile ? '0.85rem' : '0.95rem', transition: 'all 0.3s', fontFamily: "'Rajdhani', sans-serif", boxShadow: '0 4px 20px rgba(0, 212, 255, 0.35)', flex: 1, letterSpacing: '1px' },
+    tinyBtn: { padding: '6px 14px', background: 'rgba(0, 212, 255, 0.06)', border: '1px solid rgba(0, 212, 255, 0.2)', color: '#00d4ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontFamily: "'Rajdhani', sans-serif", fontWeight: '600', letterSpacing: '0.5px', transition: 'all 0.2s' },
     scoreboard: { display: 'flex', alignItems: 'center', gap: isMobile ? '15px' : '40px', marginTop: '40px', flexWrap: 'wrap', justifyContent: 'center' },
-    teamName: { fontSize: isMobile ? '1.8rem' : '3rem', fontWeight: 'bold', textTransform: 'uppercase', textShadow: '0 0 20px rgba(0,0,0,0.5)' },
-    vsBadge: { fontSize: '1.5rem', color: '#444', fontStyle: 'italic', fontWeight: '900' },
-    statusBar: { width: isMobile ? '90%' : '80%', maxWidth: '800px', textAlign: 'center', padding: '15px', background: 'rgba(0,0,0,0.6)', borderRadius: '10px', margin: '30px 0', border: '1px solid #333', textTransform: 'uppercase', letterSpacing: '2px', transition: '0.3s ease', fontSize: isMobile ? '0.8rem' : '1rem' },
-    grid: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: isMobile ? '10px' : '20px', maxWidth: '1400px', padding: '10px' },
-    mapCard: { width: isMobile ? '44vw' : '160px', height: isMobile ? '60vw' : '240px', borderRadius: '10px', position: 'relative', overflow: 'hidden', transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)', backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: '0 5px 15px rgba(0,0,0,0.5)' },
-    cardContent: { position: 'absolute', bottom: '0', width: '100%', padding: '10px', background: 'linear-gradient(to top, black, transparent)' },
-    mapTitle: { fontSize: isMobile ? '1.2rem' : '1.4rem', fontWeight: 'bold', textTransform: 'uppercase', display: 'block', lineHeight: '1' },
-    badgeBan: { marginTop: '5px', color: '#ff4444', fontWeight: 'bold', textTransform: 'uppercase', fontSize: isMobile ? '0.8rem' : '1rem' },
-    badgePick: { marginTop: '5px', color: '#00ff00', fontWeight: 'bold', textTransform: 'uppercase', fontSize: isMobile ? '0.8rem' : '1rem' },
-    badgeDecider: { marginTop: '5px', color: '#ffa500', fontWeight: 'bold', textTransform: 'uppercase', fontSize: isMobile ? '0.8rem' : '1rem' },
-    miniSideBadge: { background: 'white', color: 'black', padding: '2px 5px', borderRadius: '3px', display: 'block', marginTop: '3px', fontSize: '0.7rem', width: 'fit-content' },
-    sideSelectionContainer: { textAlign: 'center', margin: '50px 0', width: '100%' },
-    sideCard: { width: isMobile ? '45%' : '300px', height: isMobile ? 'auto' : '320px', cursor: 'pointer', transition: 'all 0.3s ease', borderRadius: '15px', overflow: 'hidden', background: 'rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '20px' },
-    sideImg: { width: '100%', height: isMobile ? '120px' : '220px', objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.2))', padding: '20px' },
-    sideLabelCT: { fontSize: isMobile ? '1.2rem' : '1.5rem', color: '#4facfe', fontWeight: 'bold', letterSpacing: '2px' },
-    sideLabelT: { fontSize: isMobile ? '1.2rem' : '1.5rem', color: '#ff9a9e', fontWeight: 'bold', letterSpacing: '2px' },
+    teamName: { fontSize: isMobile ? '1.4rem' : '2rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px', fontFamily: "'Rajdhani', sans-serif" },
+    vsBadge: { fontSize: '0.7rem', color: '#444', fontWeight: '900', letterSpacing: '4px' },
+    statusBar: { width: isMobile ? '92%' : '80%', maxWidth: '700px', textAlign: 'center', padding: '14px 20px', background: 'rgba(10, 12, 20, 0.7)', borderRadius: '10px', margin: '20px 0 16px', border: '1px solid rgba(255,255,255,0.04)', textTransform: 'uppercase', letterSpacing: '3px', transition: '0.3s ease', fontSize: isMobile ? '0.75rem' : '0.85rem', backdropFilter: 'blur(8px)', fontWeight: '700' },
+    grid: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: isMobile ? '8px' : '14px', maxWidth: '1200px', padding: '8px' },
+    mapCard: { width: isMobile ? '44vw' : '150px', height: isMobile ? '56vw' : '220px', borderRadius: '10px', position: 'relative', overflow: 'hidden', transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)', backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.4)' },
+    cardContent: { position: 'absolute', bottom: '0', width: '100%', padding: '10px', background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 70%, transparent 100%)' },
+    mapTitle: { fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: '800', textTransform: 'uppercase', display: 'block', lineHeight: '1', letterSpacing: '1px' },
+    badgeBan: { marginTop: '4px', color: '#ff4444', fontWeight: '700', textTransform: 'uppercase', fontSize: isMobile ? '0.65rem' : '0.75rem', letterSpacing: '1px' },
+    badgePick: { marginTop: '4px', color: '#00ff88', fontWeight: '700', textTransform: 'uppercase', fontSize: isMobile ? '0.65rem' : '0.75rem', letterSpacing: '1px' },
+    badgeDecider: { marginTop: '4px', color: '#ffa500', fontWeight: '700', textTransform: 'uppercase', fontSize: isMobile ? '0.65rem' : '0.75rem', letterSpacing: '1px' },
+    miniSideBadge: { background: 'rgba(255,255,255,0.1)', color: '#ccc', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '3px', fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.5px', border: '1px solid rgba(255,255,255,0.08)' },
+    sideSelectionContainer: { textAlign: 'center', margin: '32px 0', width: '100%' },
+    sideCard: { width: isMobile ? '45%' : '240px', cursor: 'pointer', transition: 'all 0.3s ease', borderRadius: '14px', overflow: 'hidden', background: 'rgba(10, 12, 20, 0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '16px', border: '1px solid rgba(255,255,255,0.04)' },
+    sideImg: { width: '100%', height: isMobile ? '100px' : '180px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.1))', padding: '16px' },
+    sideLabelCT: { fontSize: isMobile ? '0.85rem' : '1rem', color: '#4facfe', fontWeight: '800', letterSpacing: '3px' },
+    sideLabelT: { fontSize: isMobile ? '0.85rem' : '1rem', color: '#ff9a9e', fontWeight: '800', letterSpacing: '3px' },
 
     // LOG BOX STYLES
-    logContainer: { width: isMobile ? '95%' : '80%', maxWidth: '800px', background: '#0a0d14', border: '1px solid #333', borderRadius: '10px', marginTop: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', overflow: 'hidden' },
-    logHeader: { padding: '15px 20px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', color: '#fff' },
-    logScroll: { padding: '20px', maxHeight: '300px', overflowY: 'auto', background: '#05070a' },
-    logRow: { marginBottom: '8px', display: 'flex', alignItems: 'flex-start', lineHeight: '1.5' },
-    copyBtn: { background: '#00d4ff', border: 'none', padding: '5px 12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', color: '#000', display: 'flex', alignItems: 'center', fontSize: '0.8rem', transition: '0.2s' },
+    logContainer: { width: isMobile ? '95%' : '80%', maxWidth: '700px', background: 'rgba(8, 10, 16, 0.9)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '12px', marginTop: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', overflow: 'hidden', backdropFilter: 'blur(12px)' },
+    logHeader: { padding: '12px 18px', background: 'rgba(255,255,255,0.015)', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: '700', color: '#444' },
+    logScroll: { padding: '16px', maxHeight: '260px', overflowY: 'auto', background: 'rgba(5, 7, 12, 0.4)' },
+    logRow: { marginBottom: '6px', display: 'flex', alignItems: 'flex-start', lineHeight: '1.5' },
+    copyBtn: { background: 'rgba(0, 212, 255, 0.08)', border: '1px solid rgba(0, 212, 255, 0.2)', padding: '5px 12px', borderRadius: '6px', fontWeight: '700', cursor: 'pointer', color: '#00d4ff', display: 'flex', alignItems: 'center', fontSize: '0.7rem', transition: '0.2s', letterSpacing: '1px' },
 
-    historyBtn: { marginTop: '30px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid #666', color: '#fff', padding: '12px 30px', borderRadius: '30px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', letterSpacing: '2px', transition: 'all 0.3s ease', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', fontFamily: "'Rajdhani', sans-serif", textTransform: 'uppercase' },
+    historyBtn: { marginTop: '28px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#aaa', padding: '14px 36px', borderRadius: '14px', cursor: 'pointer', fontSize: '0.95rem', fontWeight: '700', letterSpacing: '3px', transition: 'all 0.3s ease', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', fontFamily: "'Rajdhani', sans-serif", textTransform: 'uppercase', backdropFilter: 'blur(4px)' },
     historyList: { width: isMobile ? '95%' : '80%', maxWidth: '800px', marginTop: '40px' },
-    historyCard: { background: 'rgba(20, 25, 35, 0.9)', marginBottom: '15px', padding: '20px', borderRadius: '10px', borderLeft: '4px solid #00d4ff', boxShadow: '0 5px 20px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'left' },
+    historyCard: { background: 'rgba(10, 15, 25, 0.9)', marginBottom: '16px', padding: '20px 24px', borderRadius: '14px', borderLeft: '3px solid #00d4ff', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)', textAlign: 'left', backdropFilter: 'blur(4px)', transition: 'all 0.2s' },
     historyHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: isMobile ? '1.2rem' : '1.4rem', fontWeight: 'bold', textTransform: 'uppercase', width: '100%' },
 
-    backBtn: { background: 'none', border: '1px solid #444', color: '#fff', padding: '10px 20px', cursor: 'pointer', marginBottom: '20px' },
-    footer: { marginTop: 'auto', padding: '20px', color: '#444', fontSize: '0.8rem', letterSpacing: '1px', textAlign: 'center' },
+    backBtn: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#aaa', padding: '10px 24px', cursor: 'pointer', marginBottom: '20px', borderRadius: '10px', fontFamily: "'Rajdhani', sans-serif", fontWeight: '600', letterSpacing: '1px', transition: 'all 0.3s' },
+    footer: { marginTop: 'auto', padding: '24px', color: '#555', fontSize: '0.75rem', letterSpacing: '2px', textAlign: 'center', fontWeight: '500' },
 
-    // NEW STYLES
-    teamLogo: { height: '50px', width: '50px', objectFit: 'contain', borderRadius: '5px', background: 'rgba(255,255,255,0.1)', padding: '2px' },
+    // TEAM STYLES
+    teamLogo: { height: '44px', width: '44px', objectFit: 'contain', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', padding: '4px' },
     mapOrderBadge: {
-        position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)',
-        background: 'rgba(0, 0, 0, 0.8)', border: '1px solid #00d4ff', color: '#fff',
-        padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.9rem',
-        boxShadow: '0 0 10px rgba(0, 212, 255, 0.5)', zIndex: 10
+        position: 'absolute', top: '8px', left: '50%', transform: 'translateX(-50%)',
+        background: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(0, 212, 255, 0.15)', color: '#00d4ff',
+        padding: '3px 10px', borderRadius: '4px', fontWeight: '700', fontSize: '0.6rem',
+        zIndex: 10, backdropFilter: 'blur(4px)', letterSpacing: '2px', fontFamily: "'Rajdhani', sans-serif"
     },
 
-    // UPDATED LINK BOX STYLES
-    linksBox: { marginTop: '30px', padding: '25px', background: 'rgba(15, 20, 30, 0.95)', borderRadius: '15px', border: '1px solid rgba(0, 212, 255, 0.2)', boxShadow: '0 0 30px rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(10px)', width: '100%', boxSizing: 'border-box', animation: 'fadeIn 0.5s ease-out' },
-    linkRow: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', background: 'rgba(0, 0, 0, 0.3)', padding: '10px 15px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' },
-    linkInput: { flex: 1, background: 'transparent', border: 'none', color: '#00d4ff', fontFamily: "'Consolas', monospace", fontSize: '0.9rem', cursor: 'pointer', outline: 'none', textOverflow: 'ellipsis' },
+    // LINK BOX STYLES
+    linksBox: { marginTop: '24px', padding: '20px', background: 'rgba(10, 15, 25, 0.8)', borderRadius: '16px', border: '1px solid rgba(0, 212, 255, 0.1)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(12px)', width: '100%', boxSizing: 'border-box', animation: 'fadeIn 0.5s ease-out' },
+    linkRow: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px', background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.04)' },
+    linkInput: { flex: 1, background: 'transparent', border: 'none', color: '#00d4ff', fontFamily: "'Consolas', monospace", fontSize: '0.85rem', cursor: 'pointer', outline: 'none', textOverflow: 'ellipsis' },
     iconBtn: { background: 'transparent', border: 'none', cursor: 'pointer', color: '#fff', padding: '5px', marginLeft: '5px', display: 'flex', alignItems: 'center', transition: '0.2s' },
 
     adminLinkBadge: {
         display: 'inline-flex', alignItems: 'center', gap: '5px',
-        background: 'rgba(255, 255, 255, 0.05)', border: '1px dashed #fff', color: '#fff',
-        padding: '5px 10px', borderRadius: '4px', fontSize: '0.8rem', textDecoration: 'none', cursor: 'pointer'
+        background: 'rgba(255, 255, 255, 0.05)', border: '1px dashed rgba(255,255,255,0.2)', color: '#aaa',
+        padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', textDecoration: 'none', cursor: 'pointer'
     },
     copyLinkBadge: {
         display: 'inline-flex', alignItems: 'center', gap: '5px',
-        background: 'rgba(0,0,0,0.3)', border: '1px solid',
-        padding: '5px 10px', borderRadius: '4px', fontSize: '0.8rem', cursor: 'pointer'
+        background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+        padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', cursor: 'pointer'
     }
 });

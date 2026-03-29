@@ -5,6 +5,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 require('dotenv').config();
 
@@ -49,7 +50,41 @@ app.use(cors());
 app.use(express.json());
 
 const MAPS_FILE = path.join(__dirname, 'maps.json');
-const MASTER_SECRET = process.env.ADMIN_SECRET || "default_secret";
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+
+// ==================== JWT AUTH MIDDLEWARE ====================
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!token) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+}
+
+function requirePermission(permission) {
+    return (req, res, next) => {
+        if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+        // super_admin has all permissions
+        if (req.user.role === 'super_admin') return next();
+        if (req.user.permissions && req.user.permissions.includes(permission)) return next();
+        return res.status(403).json({ error: 'Permission denied' });
+    };
+}
+
+function requireSuperAdmin(req, res, next) {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    if (req.user.role !== 'super_admin') return res.status(403).json({ error: 'Super admin access required' });
+    next();
+}
 
 let rooms = {};
 
@@ -159,6 +194,216 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// ==================== AUTH ROUTES ====================
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password required' });
+        }
+
+        const user = await db.getUserByUsername(username);
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid username or password' });
+        }
+
+        const valid = await db.verifyPassword(password, user.password_hash);
+        if (!valid) {
+            return res.status(401).json({ error: 'Invalid username or password' });
+        }
+
+        // Create JWT token
+        const tokenPayload = {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            permissions: user.permissions
+        };
+        const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
+
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                permissions: user.permissions,
+                must_change_password: user.must_change_password
+            }
+        });
+    } catch (error) {
+        console.error('[AUTH] Login error:', error);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!newPassword || newPassword.length < 4) {
+            return res.status(400).json({ error: 'New password must be at least 4 characters' });
+        }
+
+        // Get the full user to verify current password
+        const user = await db.getUserById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // If must_change_password, currentPassword check is optional (first login)
+        if (!user.must_change_password) {
+            if (!currentPassword) {
+                return res.status(400).json({ error: 'Current password required' });
+            }
+            const valid = await db.verifyPassword(currentPassword, user.password_hash);
+            if (!valid) {
+                return res.status(401).json({ error: 'Current password is incorrect' });
+            }
+        }
+
+        await db.updateUserPassword(user.id, newPassword);
+
+        // Issue a new token with updated info
+        const updatedUser = await db.getUserById(user.id);
+        const tokenPayload = {
+            id: updatedUser.id,
+            username: updatedUser.username,
+            role: updatedUser.role,
+            permissions: updatedUser.permissions
+        };
+        const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });
+
+        res.json({ success: true, token, message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('[AUTH] Change password error:', error);
+        res.status(500).json({ error: 'Failed to change password' });
+    }
+});
+
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    try {
+        const user = await db.getUserById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            permissions: user.permissions,
+            must_change_password: user.must_change_password
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to get user info' });
+    }
+});
+
+// ==================== USER MANAGEMENT ROUTES (super_admin only) ====================
+app.get('/api/admin/users', authenticateToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const users = await db.getAllUsers();
+        res.json(users);
+    } catch (error) {
+        console.error('[API] Error getting users:', error);
+        res.status(500).json({ error: 'Failed to get users' });
+    }
+});
+
+app.post('/api/admin/users', authenticateToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const { username, password, role, permissions } = req.body;
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password required' });
+        }
+        if (username.length < 3) {
+            return res.status(400).json({ error: 'Username must be at least 3 characters' });
+        }
+        if (password.length < 4) {
+            return res.status(400).json({ error: 'Password must be at least 4 characters' });
+        }
+        if (role && !['admin', 'super_admin'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role. Must be admin or super_admin' });
+        }
+
+        const newUser = await db.createUser(username, password, role || 'admin', permissions || []);
+        res.json({ success: true, user: newUser });
+    } catch (error) {
+        console.error('[API] Error creating user:', error);
+        res.status(400).json({ error: error.message || 'Failed to create user' });
+    }
+});
+
+app.put('/api/admin/users/:id', authenticateToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const { role, permissions } = req.body;
+
+        // Prevent self-demotion
+        if (userId === req.user.id && role && role !== 'super_admin') {
+            return res.status(400).json({ error: 'Cannot demote yourself' });
+        }
+
+        const updates = {};
+        if (role !== undefined) updates.role = role;
+        if (permissions !== undefined) updates.permissions = permissions;
+
+        const updated = await db.updateUser(userId, updates);
+        if (!updated) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('[API] Error updating user:', error);
+        res.status(500).json({ error: 'Failed to update user' });
+    }
+});
+
+app.delete('/api/admin/users/:id', authenticateToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+
+        // Prevent self-deletion
+        if (userId === req.user.id) {
+            return res.status(400).json({ error: 'Cannot delete yourself' });
+        }
+
+        const deleted = await db.deleteUser(userId);
+        if (!deleted) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('[API] Error deleting user:', error);
+        res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
+app.post('/api/admin/users/:id/reset-password', authenticateToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const { newPassword } = req.body;
+
+        if (!newPassword || newPassword.length < 4) {
+            return res.status(400).json({ error: 'Password must be at least 4 characters' });
+        }
+
+        await db.updateUserPassword(userId, newPassword);
+        await db.updateUser(userId, { must_change_password: true });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('[API] Error resetting password:', error);
+        res.status(500).json({ error: 'Failed to reset password' });
+    }
+});
+
+// Get available permissions list
+app.get('/api/admin/permissions', authenticateToken, requireSuperAdmin, (req, res) => {
+    res.json(db.ALL_PERMISSIONS);
+});
+
+// ==================== PUBLIC ROUTES ====================
 app.get('/api/history', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -173,8 +418,8 @@ app.get('/api/history', async (req, res) => {
 
 app.get('/api/maps', (req, res) => res.json(activeMaps));
 
-app.post('/api/admin/history', async (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+// ==================== ADMIN ROUTES (JWT protected) ====================
+app.post('/api/admin/history', authenticateToken, requirePermission('view_history'), async (req, res) => {
     try {
         // Combine in-memory active rooms with database matches
         const activeMatches = Object.values(rooms).map(({ timerHandle, ...keep }) => keep);
@@ -194,8 +439,7 @@ app.post('/api/admin/history', async (req, res) => {
     }
 });
 
-app.post('/api/admin/delete', async (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+app.post('/api/admin/delete', authenticateToken, requirePermission('delete_match'), async (req, res) => {
     try {
         const room = rooms[req.body.id];
         if (room) {
@@ -212,29 +456,29 @@ app.post('/api/admin/delete', async (req, res) => {
     }
 });
 
-app.post('/api/admin/reset', (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+app.post('/api/admin/reset', authenticateToken, requirePermission('nuke_history'), async (req, res) => {
     Object.values(rooms).forEach(r => { if (r.timerHandle) clearTimeout(r.timerHandle); });
     rooms = {};
-    if (fs.existsSync(HISTORY_FILE)) fs.unlinkSync(HISTORY_FILE);
+    try {
+        await db.deleteAllMatches();
+    } catch (e) {
+        console.error("[API] Error clearing database:", e);
+    }
     res.json({ success: true });
 });
 
-app.post('/api/admin/maps/get', (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+app.post('/api/admin/maps/get', authenticateToken, requirePermission('manage_maps'), (req, res) => {
     res.json(activeMaps);
 });
 
-app.post('/api/admin/maps/update', (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+app.post('/api/admin/maps/update', authenticateToken, requirePermission('manage_maps'), (req, res) => {
     if (!Array.isArray(req.body.maps)) return res.status(400).json({ error: "Invalid Data" });
     activeMaps = req.body.maps;
     saveMaps();
     res.json({ success: true, maps: activeMaps });
 });
 
-app.post('/api/admin/webhook/get', async (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+app.post('/api/admin/webhook/get', authenticateToken, requirePermission('manage_webhook'), async (req, res) => {
     try {
         const webhookUrl = await settings.getAdminWebhook();
         res.json({ webhookUrl: webhookUrl || '' });
@@ -244,8 +488,7 @@ app.post('/api/admin/webhook/get', async (req, res) => {
     }
 });
 
-app.post('/api/admin/webhook/set', async (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+app.post('/api/admin/webhook/set', authenticateToken, requirePermission('manage_webhook'), async (req, res) => {
     try {
         const { webhookUrl } = req.body;
 
@@ -262,8 +505,7 @@ app.post('/api/admin/webhook/set', async (req, res) => {
     }
 });
 
-app.post('/api/admin/webhook/test', async (req, res) => {
-    if (req.body.secret !== MASTER_SECRET) return res.status(403).json({ error: "Invalid Key" });
+app.post('/api/admin/webhook/test', authenticateToken, requirePermission('manage_webhook'), async (req, res) => {
     try {
         const { webhookUrl } = req.body;
 
@@ -369,7 +611,7 @@ const handleAutoAction = (roomId) => {
     checkMatchEnd(room);
     if (!room.finished) { startTurnTimer(roomId); } else { room.timerEndsAt = null; }
     saveHistory(roomId);
-    const { keys, timerHandle, ...safe } = room;
+    const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
     io.to(roomId).emit('update_state', safe);
 };
 
@@ -491,7 +733,7 @@ io.on('connection', (socket) => {
         else if (key === room.keys.A) role = 'A';
         else if (key === room.keys.B) role = 'B';
         socket.emit('role_assigned', role);
-        const { keys, timerHandle, ...safe } = room;
+        const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
         socket.emit('update_state', safe);
 
     });
@@ -516,7 +758,7 @@ io.on('connection', (socket) => {
                 startTurnTimer(roomId);
             }
             saveHistory(roomId);
-            const { keys, timerHandle, ...safe } = room;
+            const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
             io.to(roomId).emit('update_state', safe);
         }
     });
@@ -540,7 +782,7 @@ io.on('connection', (socket) => {
         notifyWebhook(roomId, 'coin_flip', { result, winner: winnerName });
 
         saveHistory(roomId);
-        const { keys, timerHandle, ...safe } = room;
+        const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
         io.to(roomId).emit('update_state', safe);
     });
 
@@ -577,7 +819,7 @@ io.on('connection', (socket) => {
         room.coinFlip.status = 'done';
         if (room.useTimer && room.ready.A && room.ready.B) { startTurnTimer(roomId); }
         saveHistory(roomId);
-        const { keys, timerHandle, ...safe } = room;
+        const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
         io.to(roomId).emit('update_state', safe);
     });
 
@@ -649,13 +891,15 @@ io.on('connection', (socket) => {
         }
 
         saveHistory(roomId);
-        const { keys, timerHandle, ...safe } = room;
+        const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
         io.to(roomId).emit('update_state', safe);
     });
 
-    socket.on('admin_reset_match', ({ roomId, secret }) => {
+    socket.on('admin_reset_match', ({ roomId, token }) => {
         const room = rooms[roomId];
-        if (!room || secret !== MASTER_SECRET) return;
+        let authorized = false;
+        if (token) { try { jwt.verify(token, JWT_SECRET); authorized = true; } catch(e) {} }
+        if (!room || !authorized) return;
         if (room.timerHandle) clearTimeout(room.timerHandle);
         room.step = 0;
         room.logs = [`[ADMIN] Match reset by Admin`];
@@ -669,13 +913,15 @@ io.on('connection', (socket) => {
         room.coinFlip = room.useCoinFlip ? { status: 'waiting_call', winner: null, result: null } : null;
         room.maps.forEach(m => { m.status = 'available'; m.pickedBy = null; m.side = null; });
         saveHistory(roomId);
-        const { keys, timerHandle, ...safe } = room;
+        const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
         io.to(roomId).emit('update_state', safe);
     });
 
-    socket.on('admin_undo_step', ({ roomId, secret }) => {
+    socket.on('admin_undo_step', ({ roomId, token }) => {
         const room = rooms[roomId];
-        if (!room || secret !== MASTER_SECRET || room.step === 0) return;
+        let authorized = false;
+        if (token) { try { jwt.verify(token, JWT_SECRET); authorized = true; } catch(e) {} }
+        if (!room || !authorized || room.step === 0) return;
         if (room.timerHandle) clearTimeout(room.timerHandle);
         room.timerEndsAt = null;
         room.step--;
@@ -708,7 +954,7 @@ io.on('connection', (socket) => {
         }
         if (room.useTimer && room.ready.A && room.ready.B && !room.finished) { startTurnTimer(roomId); }
         saveHistory(roomId);
-        const { keys, timerHandle, ...safe } = room;
+        const { keys, timerHandle, tempWebhookUrl: _twh, ...safe } = room;
         io.to(roomId).emit('update_state', safe);
     });
 
@@ -728,4 +974,5 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(3001, () => { });
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => { });
