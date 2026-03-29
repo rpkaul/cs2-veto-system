@@ -25,7 +25,6 @@ npm start               # runs on port 3000
 
 ```env
 PORT=3001
-ADMIN_SECRET=your_admin_secret
 JWT_SECRET=your_jwt_secret
 ```
 
