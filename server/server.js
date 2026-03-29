@@ -49,6 +49,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ==================== SERVE CLIENT BUILD IN PRODUCTION ====================
+const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
+if (fs.existsSync(clientBuildPath)) {
+    console.log('[SERVER] Serving client build from:', clientBuildPath);
+    app.use(express.static(clientBuildPath));
+}
+
 const MAPS_FILE = path.join(__dirname, 'maps.json');
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
@@ -974,5 +981,26 @@ io.on('connection', (socket) => {
     });
 });
 
+// ==================== CATCH-ALL: SERVE CLIENT FOR SPA ROUTING ====================
+if (fs.existsSync(clientBuildPath)) {
+    app.use((req, res, next) => {
+        // Only catch non-API, non-socket routes
+        if (!req.path.startsWith('/api/') && !req.path.startsWith('/socket.io/')) {
+            res.sendFile(path.join(clientBuildPath, 'index.html'));
+        } else {
+            next();
+        }
+    });
+}
+
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => { });
+server.listen(PORT, () => {
+    console.log(`[SERVER] ✅ Running on port ${PORT}`);
+    console.log(`[SERVER] Environment: ${process.env.NODE_ENV || 'development'}`);
+    if (fs.existsSync(clientBuildPath)) {
+        console.log(`[SERVER] Serving client build from: ${clientBuildPath}`);
+    } else {
+        console.log(`[SERVER] No client build found at: ${clientBuildPath}`);
+        console.log(`[SERVER] Run 'cd client && npm run build' to create production build`);
+    }
+});

@@ -86,6 +86,10 @@ const getMapImageUrl = (mapName, customImage = null) => {
     const prefixes = ['de_', 'ar_', 'cs_', 'awp_', 'aim_', 'bhop_', 'ze_'];
     const secondaryUrls = [];
 
+    // Local map images first (fastest, no network dependency)
+    secondaryUrls.push(`/maps/${mapNameLower}.jpg`);
+    secondaryUrls.push(`/maps/${baseName}.jpg`);
+
     // Add fallback with detected prefix first
     secondaryUrls.push(`https://raw.githubusercontent.com/rpkaul/cs-map-images/refs/heads/main/${baseName}.jpg`);
 
